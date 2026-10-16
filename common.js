@@ -1,10 +1,15 @@
 /**
  * 《词句审判庭》公共配置与工具
- * 使用前请填入 SUPABASE_URL 与 SUPABASE_ANON_KEY
  */
 
 export const SUPABASE_URL = 'https://cbnlchfvqtcuqmptqnlg.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable__vQn9wLyRdJGnH3IeakYrg_1qvfgm5m';
+
+/** 用 jsDelivr，比 esm.sh 在国内/微信里更稳 */
+export const SUPABASE_SDK_URL =
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm';
+
+export const STATE_ID = 'live';
 
 /** 题库（无答案字段，防泄题） */
 export const QUESTIONS = [
@@ -45,15 +50,6 @@ export const LABEL = {
   real: '现实',
 };
 
-export const COLORS = {
-  bg: '#12161C',
-  card: '#1C232C',
-  word: '#A02A34',
-  real: '#96702E',
-  text: '#E8ECF2',
-  emph: '#FFFFFF',
-};
-
 const CLIENT_KEY = 'court_client_id';
 const SESSION_KEY = 'court_session';
 
@@ -70,7 +66,8 @@ export function getClientId() {
   return id;
 }
 
-export function getSession() {
+/** 本地缓存的场次（看板写入；投票页优先跟云端） */
+export function getLocalSession() {
   const params = new URLSearchParams(location.search);
   const fromUrl = params.get('s');
   if (fromUrl) {
@@ -83,8 +80,17 @@ export function getSession() {
   );
 }
 
-export function setSession(session) {
+export function setLocalSession(session) {
   localStorage.setItem(SESSION_KEY, session);
+}
+
+/** @deprecated 兼容旧调用 */
+export function getSession() {
+  return getLocalSession();
+}
+
+export function setSession(session) {
+  setLocalSession(session);
 }
 
 export function isConfigured() {
@@ -96,10 +102,11 @@ export function isConfigured() {
   );
 }
 
-/**
- * 从票列表统计某题 / 全场
- * votes: [{ q, a, client_id? }]
- */
+export async function loadSupabase() {
+  const { createClient } = await import(SUPABASE_SDK_URL);
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
 export function tallyVotes(votes, q) {
   const filtered = q == null ? votes : votes.filter((v) => v.q === q);
   let word = 0;
@@ -121,7 +128,6 @@ export function participantCount(votes) {
   return clients.size;
 }
 
-/** 数字滚动动画 */
 export function animateNumber(el, to, duration = 300) {
   const from = parseInt(el.dataset.value || '0', 10) || 0;
   if (from === to) {
@@ -139,4 +145,31 @@ export function animateNumber(el, to, duration = 300) {
     else el.dataset.value = String(to);
   }
   requestAnimationFrame(frame);
+}
+
+/** 读取控场状态 */
+export async function fetchGameState(supabase) {
+  const { data, error } = await supabase
+    .from('game_state')
+    .select('session,current_q,revealed,updated_at')
+    .eq('id', STATE_ID)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** 写入控场状态（部分字段） */
+export async function patchGameState(supabase, patch) {
+  const payload = {
+    id: STATE_ID,
+    updated_at: new Date().toISOString(),
+    ...patch,
+  };
+  const { data, error } = await supabase
+    .from('game_state')
+    .upsert(payload, { onConflict: 'id' })
+    .select('session,current_q,revealed,updated_at')
+    .single();
+  if (error) throw error;
+  return data;
 }

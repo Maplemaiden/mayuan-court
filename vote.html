@@ -42,7 +42,12 @@
       font-size: 20px;
       font-weight: 700;
       color: var(--emph);
-      margin-bottom: 20px;
+      margin-bottom: 12px;
+    }
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
     }
     .progress {
       font-size: 14px;
@@ -95,7 +100,7 @@
     .opt .check { font-size: 18px; opacity: 0; }
     .opt.picked .check { opacity: 1; }
 
-    .wait, .done, .gate, .err-box {
+    .wait, .done, .gate {
       text-align: center;
       padding: 40px 12px;
     }
@@ -123,17 +128,18 @@
       z-index: 99;
       display: none;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      text-align: center;
     }
     .toast.show { display: block; }
-    .retry-btn {
-      margin-top: 16px;
-      min-height: 48px;
-      padding: 0 24px;
-      font-size: 16px;
+    .toast button {
+      margin-top: 10px;
+      min-height: 40px;
+      padding: 0 18px;
       border: none;
       border-radius: 8px;
       background: var(--word);
       color: #fff;
+      font-size: 15px;
       cursor: pointer;
     }
     .hidden { display: none !important; }
@@ -146,26 +152,35 @@
       margin-bottom: 12px;
       line-height: 1.5;
     }
+    .dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #3a9;
+      margin-right: 4px;
+    }
+    .dot.err { background: #c44; }
   </style>
 </head>
 <body>
   <div id="cfgWarn" class="cfg-warn hidden">
-    尚未配置 Supabase。请在 common.js 填入 SUPABASE_URL 与 SUPABASE_ANON_KEY。
+    尚未配置或无法连接。请讲者确认已执行 schema.sql。
   </div>
 
   <div class="eyebrow">第 5 组 ·《德意志意识形态》第一章</div>
   <div class="brand">词句审判庭</div>
+  <div class="meta" id="metaLine">
+    <span class="dot" id="syncDot"></span>同步中…
+  </div>
 
-  <!-- 初始门页 -->
   <div id="gate" class="card gate">
     <h2>等讲者开始</h2>
     <p>六道判断题：这句话是「只讲了词句」，还是「碰到了现实」？</p>
-    <p style="margin-top:16px">不记名 · 点选项即提交</p>
-    <button class="retry-btn" id="startBtn" type="button">开始答题 · 第 1 题</button>
+    <p style="margin-top:16px">不记名 · 讲者切题后自动出现<br />点选项即提交</p>
   </div>
 
-  <!-- 答题 -->
-  <div id="quiz" class="hidden" style="flex:1;display:flex;flex-direction:column">
+  <div id="quiz" class="hidden" style="flex:1;flex-direction:column">
     <div class="progress">第 <strong id="qNum">1</strong> / 6 题</div>
     <div class="card">
       <div class="q-text" id="qText"></div>
@@ -180,10 +195,9 @@
     </div>
   </div>
 
-  <!-- 等待 / 完成 -->
   <div id="wait" class="card wait hidden">
-    <h2>已提交</h2>
-    <p>等讲者公布答案。<br />请抬头看投影看板。</p>
+    <h2 id="waitTitle">已提交</h2>
+    <p id="waitBody">等讲者切到下一题或揭晓。<br />请抬头看投影看板。</p>
   </div>
 
   <div id="done" class="card done hidden">
@@ -194,43 +208,64 @@
   <div id="toast" class="toast"></div>
 
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
     import {
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
       QUESTIONS,
       getClientId,
-      getSession,
+      setLocalSession,
       isConfigured,
+      loadSupabase,
+      fetchGameState,
     } from './common.js';
 
     const el = (id) => document.getElementById(id);
     const toast = el('toast');
+
     let supabase = null;
-    let index = 0;
+    let session = '';
+    let currentQ = 1;
+    let revealed = false;
     let submitting = false;
     let pendingRetry = null;
+    /** 本客户端已答过的题号 */
+    let answered = new Set();
+    let lastStateKey = '';
 
-    function showToast(msg, ms = 2800) {
-      toast.textContent = msg;
+    function showToast(msg, withRetry = false) {
+      toast.innerHTML = '';
+      const p = document.createElement('div');
+      p.textContent = msg;
+      toast.appendChild(p);
+      if (withRetry && pendingRetry) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '重试提交';
+        btn.addEventListener('click', () => {
+          toast.classList.remove('show');
+          submitVote(pendingRetry);
+        });
+        toast.appendChild(btn);
+      }
       toast.classList.add('show');
       clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toast.classList.remove('show'), ms);
+      if (!withRetry) {
+        showToast._t = setTimeout(() => toast.classList.remove('show'), 2800);
+      }
     }
 
     function showOnly(id) {
       ['gate', 'quiz', 'wait', 'done'].forEach((k) => {
         const node = el(k);
-        if (k === id) node.classList.remove('hidden');
-        else node.classList.add('hidden');
+        if (k === id) {
+          node.classList.remove('hidden');
+          if (k === 'quiz') node.style.display = 'flex';
+        } else {
+          node.classList.add('hidden');
+        }
       });
-      if (id === 'quiz') {
-        el('quiz').style.display = 'flex';
-      }
     }
 
-    function renderQ() {
-      const item = QUESTIONS[index];
+    function renderQuiz() {
+      const item = QUESTIONS.find((x) => x.q === currentQ) || QUESTIONS[0];
       el('qNum').textContent = String(item.q);
       el('qText').textContent = item.text;
       document.querySelectorAll('.opt').forEach((btn) => {
@@ -239,10 +274,61 @@
       });
     }
 
+    function allDone() {
+      return QUESTIONS.every((q) => answered.has(q.q));
+    }
+
+    function applyView() {
+      el('metaLine').innerHTML =
+        `<span class="dot" id="syncDot"></span>` +
+        `场次 ${session || '…'} · 第 ${currentQ} 题` +
+        (revealed ? ' · 已揭晓' : '');
+
+      if (!session) {
+        showOnly('gate');
+        el('gate').querySelector('h2').textContent = '连接中…';
+        return;
+      }
+
+      if (allDone()) {
+        showOnly('done');
+        return;
+      }
+
+      if (answered.has(currentQ)) {
+        showOnly('wait');
+        if (revealed) {
+          el('waitTitle').textContent = '本题已揭晓';
+          el('waitBody').innerHTML =
+            '请看投影上的正确答案与判对率。<br />等讲者切到下一题。';
+        } else {
+          el('waitTitle').textContent = '已提交';
+          el('waitBody').innerHTML =
+            '等讲者切到下一题或揭晓。<br />请抬头看投影看板。';
+        }
+        return;
+      }
+
+      // 未答当前题 → 答题
+      renderQuiz();
+      showOnly('quiz');
+    }
+
+    async function refreshAnswered() {
+      if (!supabase || !session) return;
+      const { data, error } = await supabase
+        .from('votes')
+        .select('q')
+        .eq('session', session)
+        .eq('client_id', getClientId());
+      if (error) throw error;
+      answered = new Set((data || []).map((r) => r.q));
+    }
+
     async function submitVote(a) {
-      if (submitting) return;
+      if (submitting || answered.has(currentQ)) return;
       submitting = true;
-      const item = QUESTIONS[index];
+      pendingRetry = a;
       const buttons = document.querySelectorAll('.opt');
       buttons.forEach((b) => {
         b.disabled = true;
@@ -251,39 +337,31 @@
 
       const payload = {
         client_id: getClientId(),
-        q: item.q,
+        q: currentQ,
         a,
-        session: getSession(),
+        session,
       };
 
       try {
-        if (!supabase) throw new Error('未配置数据库');
-
-        // 同人同题再投：覆盖选项（唯一约束 session+client_id+q）
+        if (!supabase) throw new Error('未连接');
         const { error } = await supabase.from('votes').upsert(payload, {
           onConflict: 'session,client_id,q',
         });
         if (error) throw error;
 
         await new Promise((r) => setTimeout(r, 400));
-
-        index += 1;
+        answered.add(currentQ);
+        pendingRetry = null;
+        toast.classList.remove('show');
         submitting = false;
-        if (index >= QUESTIONS.length) {
-          showOnly('done');
-        } else {
-          renderQ();
-          showOnly('quiz');
-        }
+        applyView();
       } catch (e) {
         submitting = false;
-        pendingRetry = a;
         buttons.forEach((b) => {
           b.disabled = false;
           b.classList.remove('picked');
         });
-        showToast('提交失败，请检查网络后重试');
-        // 提供按钮级重试：再次点击同一选项即可
+        showToast('提交失败，请检查网络后重试', true);
         console.error(e);
       }
     }
@@ -295,22 +373,69 @@
       });
     });
 
-    el('startBtn').addEventListener('click', () => {
-      index = 0;
-      renderQ();
-      showOnly('quiz');
-    });
+    async function pollState() {
+      if (!supabase) return;
+      try {
+        const st = await fetchGameState(supabase);
+        if (!st) {
+          el('syncDot')?.classList.add('err');
+          showOnly('gate');
+          el('gate').querySelector('h2').textContent = '等讲者打开看板';
+          el('gate').querySelector('p').textContent =
+            '讲者需先打开看板并执行含 game_state 的 schema.sql';
+          return;
+        }
 
-    // 初始化
-    if (!isConfigured()) {
-      el('cfgWarn').classList.remove('hidden');
-    } else {
-      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const nextSession = st.session;
+        const nextQ = st.current_q;
+        const nextRevealed = !!st.revealed;
+        const key = `${nextSession}|${nextQ}|${nextRevealed}`;
+
+        const sessionChanged = nextSession !== session;
+        session = nextSession;
+        setLocalSession(session);
+        currentQ = nextQ;
+        revealed = nextRevealed;
+
+        if (sessionChanged) {
+          await refreshAnswered();
+        }
+
+        // 状态变化或首次：刷新视图
+        if (key !== lastStateKey) {
+          lastStateKey = key;
+          // 切场次/切题时拉取已答记录，避免重复答
+          await refreshAnswered();
+          applyView();
+        }
+
+        const dot = el('syncDot');
+        if (dot) dot.classList.remove('err');
+      } catch (e) {
+        console.error(e);
+        const dot = el('syncDot');
+        if (dot) dot.classList.add('err');
+      }
     }
 
-    // 门页文案：场次
-    const session = getSession();
-    el('gate').querySelector('h2').textContent = `等讲者开始 · 场次 ${session}`;
+    async function boot() {
+      if (!isConfigured()) {
+        el('cfgWarn').classList.remove('hidden');
+        return;
+      }
+      try {
+        supabase = await loadSupabase();
+      } catch (e) {
+        el('cfgWarn').classList.remove('hidden');
+        el('cfgWarn').textContent = '加载失败，请换网络或用系统浏览器打开。';
+        console.error(e);
+        return;
+      }
+      await pollState();
+      setInterval(pollState, 2000);
+    }
+
+    boot();
   </script>
 </body>
 </html>
