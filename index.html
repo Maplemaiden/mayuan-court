@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>词句审判庭</title>
+  <style>
+    :root {
+      --bg: #12161C;
+      --card: #1C232C;
+      --word: #A02A34;
+      --real: #96702E;
+      --text: #E8ECF2;
+      --muted: #8B93A1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .box {
+      max-width: 420px;
+      width: 100%;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 32px 28px;
+    }
+    .eyebrow { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+    a {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    a.vote { background: var(--word); }
+    a.board { background: var(--real); }
+    .hint { font-size: 13px; color: var(--muted); margin-top: 16px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="eyebrow">第 5 组 ·《德意志意识形态》第一章</div>
+    <h1>词句审判庭</h1>
+    <p>课堂互动：判断句子是「词句」还是「现实」。</p>
+    <a class="vote" href="./vote.html">同学答题（扫码进这个）</a>
+    <a class="board" href="./board.html">讲者看板（投影打开）</a>
+    <p class="hint">
+      课前请确认 common.js 已填 Supabase 配置，并在控制台执行过「数据库建表.sql」。<br />
+      课堂结束请在看板上点「清空本场数据」。
+    </p>
+  </div>
+</body>
+</html>

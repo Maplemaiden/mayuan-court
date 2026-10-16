@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>词句审判庭 · 答题</title>
+  <style>
+    :root {
+      --bg: #12161C;
+      --card: #1C232C;
+      --word: #A02A34;
+      --real: #96702E;
+      --text: #E8ECF2;
+      --muted: #8B93A1;
+      --emph: #FFFFFF;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--emph);
+      margin-bottom: 20px;
+    }
+    .progress {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .progress strong { color: var(--emph); font-size: 16px; }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .q-text {
+      font-size: 22px;
+      line-height: 1.55;
+      font-weight: 600;
+      color: var(--emph);
+      margin-bottom: 28px;
+      flex: 1;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .opt {
+      min-height: 56px;
+      border: none;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .opt:active { transform: scale(0.98); }
+    .opt:disabled { opacity: 0.55; cursor: default; }
+    .opt.word { background: var(--word); }
+    .opt.real { background: var(--real); }
+    .opt.picked { filter: brightness(1.15); box-shadow: 0 0 0 2px #fff inset; }
+    .opt .check { font-size: 18px; opacity: 0; }
+    .opt.picked .check { opacity: 1; }
+
+    .wait, .done, .gate, .err-box {
+      text-align: center;
+      padding: 40px 12px;
+    }
+    .wait h2, .done h2, .gate h2 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      color: var(--emph);
+    }
+    .wait p, .done p, .gate p {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: #2a3140;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 15px;
+      max-width: 90%;
+      z-index: 99;
+      display: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .toast.show { display: block; }
+    .retry-btn {
+      margin-top: 16px;
+      min-height: 48px;
+      padding: 0 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--word);
+      color: #fff;
+      cursor: pointer;
+    }
+    .hidden { display: none !important; }
+    .cfg-warn {
+      background: #3a2a20;
+      color: #f0c090;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div id="cfgWarn" class="cfg-warn hidden">
+    尚未配置 Supabase。请在 common.js 填入 SUPABASE_URL 与 SUPABASE_ANON_KEY。
+  </div>
+
+  <div class="eyebrow">第 5 组 ·《德意志意识形态》第一章</div>
+  <div class="brand">词句审判庭</div>
+
+  <!-- 初始门页 -->
+  <div id="gate" class="card gate">
+    <h2>等讲者开始</h2>
+    <p>六道判断题：这句话是「只讲了词句」，还是「碰到了现实」？</p>
+    <p style="margin-top:16px">不记名 · 点选项即提交</p>
+    <button class="retry-btn" id="startBtn" type="button">开始答题 · 第 1 题</button>
+  </div>
+
+  <!-- 答题 -->
+  <div id="quiz" class="hidden" style="flex:1;display:flex;flex-direction:column">
+    <div class="progress">第 <strong id="qNum">1</strong> / 6 题</div>
+    <div class="card">
+      <div class="q-text" id="qText"></div>
+      <div class="options">
+        <button type="button" class="opt word" data-a="word">
+          <span>词句</span><span class="check">✓</span>
+        </button>
+        <button type="button" class="opt real" data-a="real">
+          <span>现实</span><span class="check">✓</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 等待 / 完成 -->
+  <div id="wait" class="card wait hidden">
+    <h2>已提交</h2>
+    <p>等讲者公布答案。<br />请抬头看投影看板。</p>
+  </div>
+
+  <div id="done" class="card done hidden">
+    <h2>六道题已全部作答</h2>
+    <p>等讲者揭晓与收尾。<br />请抬头看投影看板。</p>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import {
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      QUESTIONS,
+      getClientId,
+      getSession,
+      isConfigured,
+    } from './common.js';
+
+    const el = (id) => document.getElementById(id);
+    const toast = el('toast');
+    let supabase = null;
+    let index = 0;
+    let submitting = false;
+    let pendingRetry = null;
+
+    function showToast(msg, ms = 2800) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove('show'), ms);
+    }
+
+    function showOnly(id) {
+      ['gate', 'quiz', 'wait', 'done'].forEach((k) => {
+        const node = el(k);
+        if (k === id) node.classList.remove('hidden');
+        else node.classList.add('hidden');
+      });
+      if (id === 'quiz') {
+        el('quiz').style.display = 'flex';
+      }
+    }
+
+    function renderQ() {
+      const item = QUESTIONS[index];
+      el('qNum').textContent = String(item.q);
+      el('qText').textContent = item.text;
+      document.querySelectorAll('.opt').forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove('picked');
+      });
+    }
+
+    async function submitVote(a) {
+      if (submitting) return;
+      submitting = true;
+      const item = QUESTIONS[index];
+      const buttons = document.querySelectorAll('.opt');
+      buttons.forEach((b) => {
+        b.disabled = true;
+        if (b.dataset.a === a) b.classList.add('picked');
+      });
+
+      const payload = {
+        client_id: getClientId(),
+        q: item.q,
+        a,
+        session: getSession(),
+      };
+
+      try {
+        if (!supabase) throw new Error('未配置数据库');
+
+        // 同人同题再投：覆盖选项（唯一约束 session+client_id+q）
+        const { error } = await supabase.from('votes').upsert(payload, {
+          onConflict: 'session,client_id,q',
+        });
+        if (error) throw error;
+
+        await new Promise((r) => setTimeout(r, 400));
+
+        index += 1;
+        submitting = false;
+        if (index >= QUESTIONS.length) {
+          showOnly('done');
+        } else {
+          renderQ();
+          showOnly('quiz');
+        }
+      } catch (e) {
+        submitting = false;
+        pendingRetry = a;
+        buttons.forEach((b) => {
+          b.disabled = false;
+          b.classList.remove('picked');
+        });
+        showToast('提交失败，请检查网络后重试');
+        // 提供按钮级重试：再次点击同一选项即可
+        console.error(e);
+      }
+    }
+
+    document.querySelectorAll('.opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (submitting) return;
+        submitVote(btn.dataset.a);
+      });
+    });
+
+    el('startBtn').addEventListener('click', () => {
+      index = 0;
+      renderQ();
+      showOnly('quiz');
+    });
+
+    // 初始化
+    if (!isConfigured()) {
+      el('cfgWarn').classList.remove('hidden');
+    } else {
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // 门页文案：场次
+    const session = getSession();
+    el('gate').querySelector('h2').textContent = `等讲者开始 · 场次 ${session}`;
+  </script>
+</body>
+</html>
