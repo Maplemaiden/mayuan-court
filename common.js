@@ -3,8 +3,8 @@
  * 使用前请填入 SUPABASE_URL 与 SUPABASE_ANON_KEY
  */
 
-export const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-export const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+export const SUPABASE_URL = 'https://cbnlchfvqtcuqmptqnlg.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable__vQn9wLyRdJGnH3IeakYrg_1qvfgm5m';
 
 /** 题库（无答案字段，防泄题） */
 export const QUESTIONS = [
