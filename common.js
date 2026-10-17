@@ -50,6 +50,16 @@ export const LABEL = {
   real: '现实',
 };
 
+/** 暖调纸感（与页面 CSS 一致） */
+export const COLORS = {
+  bg: '#1C1914',
+  card: '#26211A',
+  word: '#B94732',
+  real: '#CAA765',
+  text: '#E8E1D3',
+  muted: '#8C8171',
+};
+
 const CLIENT_KEY = 'court_client_id';
 
 export function getClientId() {

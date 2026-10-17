@@ -5,22 +5,28 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>词句审判庭 · 答题</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #12161C;
-      --card: #1C232C;
-      --word: #A02A34;
-      --real: #96702E;
-      --text: #E8ECF2;
-      --muted: #8B93A1;
-      --emph: #FFFFFF;
+      --bg: #1C1914;
+      --card: #26211A;
+      --word: #B94732;
+      --real: #CAA765;
+      --text: #E8E1D3;
+      --muted: #8C8171;
+      --border: #3A3227;
+      --emph: #E8E1D3;
+      --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, serif;
+      --sans: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-family: var(--sans);
       -webkit-tap-highlight-color: transparent;
       overflow-x: hidden;
     }
@@ -31,7 +37,22 @@
       padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
       max-width: 480px;
       margin: 0 auto;
+      position: relative;
     }
+    /* 纸纹 + 暗角 */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(circle at 22% 28%, rgba(202, 167, 101, 0.055), transparent 52%),
+        radial-gradient(circle at 78% 72%, rgba(185, 71, 50, 0.045), transparent 52%);
+      box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.45);
+    }
+    body > * { position: relative; z-index: 1; }
+
     .eyebrow {
       font-size: 13px;
       color: var(--muted);
@@ -42,16 +63,23 @@
       font-size: 20px;
       font-weight: 700;
       color: var(--emph);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      font-family: var(--serif);
+    }
+    .rule {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #4A4033, transparent);
+      margin-bottom: 14px;
     }
     .progress {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--muted);
       margin-bottom: 12px;
     }
-    .progress strong { color: var(--emph); font-size: 16px; }
+    .progress strong { color: var(--emph); font-size: 14px; font-weight: 600; }
     .card {
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px 18px;
       flex: 1;
@@ -59,11 +87,12 @@
       flex-direction: column;
     }
     .q-text {
+      font-family: var(--serif);
       font-size: 22px;
-      line-height: 1.55;
+      line-height: 1.7;
       font-weight: 600;
       color: var(--emph);
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       flex: 1;
     }
     .options {
@@ -72,45 +101,66 @@
       gap: 12px;
     }
     .opt {
-      min-height: 56px;
-      border: none;
+      min-height: 64px;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      font-size: 20px;
-      font-weight: 600;
-      color: #fff;
+      background: var(--card);
+      padding: 14px 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s;
+      gap: 12px;
+      text-align: left;
+      color: var(--text);
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
       -webkit-user-select: none;
       user-select: none;
+      font-family: var(--sans);
     }
     .opt:active { transform: scale(0.98); }
     .opt:disabled { opacity: 0.55; cursor: default; }
-    .opt.word { background: var(--word); }
-    .opt.real { background: var(--real); }
-    .opt.picked { filter: brightness(1.15); box-shadow: 0 0 0 2px #fff inset; }
-    .opt .check { font-size: 18px; opacity: 0; }
+    .opt .dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid #4A4033;
+      flex: 0 0 auto;
+      position: relative;
+    }
+    .opt.word .dot { border-color: var(--word); }
+    .opt.real .dot { border-color: var(--real); }
+    .opt.picked .dot::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .opt.word.picked { border-color: var(--word); background: rgba(185, 71, 50, 0.12); color: var(--word); }
+    .opt.real.picked { border-color: var(--real); background: rgba(202, 167, 101, 0.12); color: var(--real); }
+    .opt .ot { font-size: 17px; font-weight: 600; color: var(--emph); }
+    .opt.picked .ot { color: inherit; }
+    .opt .os { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .opt .check { margin-left: auto; font-size: 16px; opacity: 0; color: inherit; }
     .opt.picked .check { opacity: 1; }
 
     .gate, .done {
       text-align: center;
-      padding: 40px 12px;
+      padding: 36px 12px;
     }
     .gate h2, .done h2 {
+      font-family: var(--serif);
       font-size: 22px;
       margin-bottom: 12px;
       color: var(--emph);
     }
     .gate p, .done p {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--muted);
-      line-height: 1.6;
+      line-height: 1.65;
     }
     .start-btn {
-      margin-top: 20px;
+      margin-top: 18px;
       min-height: 52px;
       padding: 0 28px;
       font-size: 17px;
@@ -120,14 +170,16 @@
       color: #fff;
       cursor: pointer;
       font-weight: 600;
+      font-family: var(--sans);
     }
     .toast {
       position: fixed;
       left: 50%;
       bottom: calc(24px + env(safe-area-inset-bottom));
       transform: translateX(-50%);
-      background: #2a3140;
-      color: #fff;
+      background: #2E2820;
+      color: var(--text);
+      border: 1px solid var(--border);
       padding: 12px 18px;
       border-radius: 8px;
       font-size: 15px;
@@ -151,8 +203,9 @@
     }
     .hidden { display: none !important; }
     .cfg-warn {
-      background: #3a2a20;
-      color: #f0c090;
+      background: #3A2A20;
+      color: #E8C090;
+      border: 1px solid #5A4030;
       padding: 12px;
       border-radius: 8px;
       font-size: 14px;
@@ -160,11 +213,10 @@
       line-height: 1.5;
     }
 
-    /* 引导弹层 */
     .modal-mask {
       position: fixed;
       inset: 0;
-      background: rgba(8, 10, 14, 0.72);
+      background: rgba(12, 10, 8, 0.78);
       z-index: 200;
       display: flex;
       align-items: center;
@@ -173,21 +225,16 @@
       animation: fadeIn 0.25s ease;
     }
     .modal-mask.closing { animation: fadeOut 0.2s ease forwards; }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     .modal {
       width: 100%;
       max-width: 360px;
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 24px 20px 20px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
       animation: slideUp 0.28s ease;
     }
     @keyframes slideUp {
@@ -195,6 +242,7 @@
       to { transform: translateY(0); opacity: 1; }
     }
     .modal h2 {
+      font-family: var(--serif);
       font-size: 20px;
       color: var(--emph);
       margin-bottom: 14px;
@@ -221,7 +269,7 @@
       color: #fff;
     }
     .modal .tag.word { background: var(--word); }
-    .modal .tag.real { background: var(--real); }
+    .modal .tag.real { background: var(--real); color: #1C1914; }
     .modal .tag small {
       display: block;
       font-size: 12px;
@@ -245,16 +293,16 @@
       font-size: 17px;
       font-weight: 600;
       cursor: pointer;
+      font-family: var(--sans);
     }
   </style>
 </head>
 <body>
-  <!-- 进入页引导 -->
   <div id="introMask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="introTitle">
     <div class="modal">
       <h2 id="introTitle">你在投什么？</h2>
       <p class="lead">
-        屏幕上会出现 <strong style="color:#fff">六句话</strong>，都出自 1845 年德国那帮思想家。
+        屏幕上会出现 <strong style="color:var(--emph)">六句话</strong>，都出自 1845 年德国那帮思想家。
         你要判断：这句话到底是在空谈概念，还是碰到了现实生活。
       </p>
       <div class="tags">
@@ -274,29 +322,42 @@
   <div class="brand">词句审判庭</div>
 
   <div id="gate" class="card gate">
+    <div class="rule" style="margin:0 0 18px"></div>
     <h2>六道判断题</h2>
     <p>这句话是「只讲了词句」，还是「碰到了现实」？</p>
     <p style="margin-top:12px">不记名 · 点选项即提交 · 答完看投影总结</p>
-    <button type="button" class="start-btn" id="howBtn" style="background:transparent;border:1px solid #3a4558;color:var(--text);margin-top:12px;margin-bottom:0;font-weight:500;font-size:15px;min-height:44px">再看一遍说明</button>
+    <button type="button" class="start-btn" id="howBtn" style="background:transparent;border:1px solid var(--border);color:var(--text);margin-top:12px;margin-bottom:0;font-weight:500;font-size:15px;min-height:44px">再看一遍说明</button>
     <button class="start-btn" id="startBtn" type="button">开始答题</button>
   </div>
 
   <div id="quiz" class="hidden" style="flex:1;flex-direction:column">
-    <div class="progress">第 <strong id="qNum">1</strong> / 6 题</div>
+    <div class="rule"></div>
+    <div class="progress">第 <strong id="qNum">1</strong> / 6 题 · <span id="qSource">P142–143</span></div>
     <div class="card">
       <div class="q-text" id="qText"></div>
       <div class="options">
         <button type="button" class="opt word" data-a="word">
-          <span>词句</span><span class="check">✓</span>
+          <span class="dot"></span>
+          <span style="flex:1">
+            <span class="ot" style="display:block">词句</span>
+            <span class="os" style="display:block">只换说法，没碰现实</span>
+          </span>
+          <span class="check">✓</span>
         </button>
         <button type="button" class="opt real" data-a="real">
-          <span>现实</span><span class="check">✓</span>
+          <span class="dot"></span>
+          <span style="flex:1">
+            <span class="ot" style="display:block">现实</span>
+            <span class="os" style="display:block">落到物质与生活</span>
+          </span>
+          <span class="check">✓</span>
         </button>
       </div>
     </div>
   </div>
 
   <div id="done" class="card done hidden">
+    <div class="rule" style="margin:0 0 18px"></div>
     <h2>全部作答完成</h2>
     <p>请抬头看投影，一起做总结。</p>
   </div>
@@ -356,6 +417,7 @@
     function renderQ() {
       const item = QUESTIONS[index];
       el('qNum').textContent = String(item.q);
+      el('qSource').textContent = item.source;
       el('qText').textContent = item.text;
       document.querySelectorAll('.opt').forEach((btn) => {
         btn.disabled = false;

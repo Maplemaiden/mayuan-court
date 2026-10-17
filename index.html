@@ -4,14 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>词句审判庭</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #12161C;
-      --card: #1C232C;
-      --word: #A02A34;
-      --real: #96702E;
-      --text: #E8ECF2;
-      --muted: #8B93A1;
+      --bg: #1C1914;
+      --card: #26211A;
+      --word: #B94732;
+      --real: #CAA765;
+      --text: #E8E1D3;
+      --muted: #8C8171;
+      --border: #3A3227;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -23,16 +27,35 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle at 22% 28%, rgba(202, 167, 101, 0.055), transparent 52%),
+        radial-gradient(circle at 78% 72%, rgba(185, 71, 50, 0.045), transparent 52%);
+      box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.45);
     }
     .box {
+      position: relative;
+      z-index: 1;
       max-width: 420px;
       width: 100%;
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 32px 28px;
     }
     .eyebrow { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-    h1 { font-size: 26px; margin-bottom: 8px; }
+    h1 {
+      font-family: "Noto Serif SC", "Songti SC", serif;
+      font-size: 26px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
     p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
     a {
       display: block;
@@ -46,8 +69,8 @@
       margin-bottom: 12px;
     }
     a.vote { background: var(--word); }
-    a.board { background: var(--real); }
-    .hint { font-size: 13px; color: var(--muted); margin-top: 16px; line-height: 1.5; }
+    a.board { background: var(--real); color: #1C1914; }
+    .hint { font-size: 13px; color: var(--muted); margin-top: 16px; line-height: 1.5; margin-bottom: 0; }
   </style>
 </head>
 <body>
