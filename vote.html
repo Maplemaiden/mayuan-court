@@ -159,9 +159,113 @@
       margin-bottom: 12px;
       line-height: 1.5;
     }
+
+    /* 引导弹层 */
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 10, 14, 0.72);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+      animation: fadeIn 0.25s ease;
+    }
+    .modal-mask.closing { animation: fadeOut 0.2s ease forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    .modal {
+      width: 100%;
+      max-width: 360px;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+      animation: slideUp 0.28s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0.6; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal h2 {
+      font-size: 20px;
+      color: var(--emph);
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .modal .lead {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .modal .tags {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .modal .tag {
+      flex: 1;
+      text-align: center;
+      padding: 10px 8px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .modal .tag.word { background: var(--word); }
+    .modal .tag.real { background: var(--real); }
+    .modal .tag small {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+    .modal .tips {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+    .modal .got-it {
+      width: 100%;
+      min-height: 52px;
+      border: none;
+      border-radius: 10px;
+      background: var(--word);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <!-- 进入页引导 -->
+  <div id="introMask" class="modal-mask" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+    <div class="modal">
+      <h2 id="introTitle">你在投什么？</h2>
+      <p class="lead">
+        屏幕上会出现 <strong style="color:#fff">六句话</strong>，都出自 1845 年德国那帮思想家。
+        你要判断：这句话到底是在空谈概念，还是碰到了现实生活。
+      </p>
+      <div class="tags">
+        <div class="tag word">词句<small>只换说法，没碰现实</small></div>
+        <div class="tag real">现实<small>落到物质与生活</small></div>
+      </div>
+      <p class="tips">不记名 · 共 6 题 · 点选项即提交<br />答完请抬头看投影，一起总结。</p>
+      <button type="button" class="got-it" id="gotItBtn">知道了</button>
+    </div>
+  </div>
+
   <div id="cfgWarn" class="cfg-warn hidden">
     尚未配置或无法连接数据库。
   </div>
@@ -173,6 +277,7 @@
     <h2>六道判断题</h2>
     <p>这句话是「只讲了词句」，还是「碰到了现实」？</p>
     <p style="margin-top:12px">不记名 · 点选项即提交 · 答完看投影总结</p>
+    <button type="button" class="start-btn" id="howBtn" style="background:transparent;border:1px solid #3a4558;color:var(--text);margin-top:12px;margin-bottom:0;font-weight:500;font-size:15px;min-height:44px">再看一遍说明</button>
     <button class="start-btn" id="startBtn" type="button">开始答题</button>
   </div>
 
@@ -310,7 +415,29 @@
       });
     });
 
+    function closeIntro() {
+      const mask = el('introMask');
+      if (!mask || mask.classList.contains('hidden')) return;
+      mask.classList.add('closing');
+      setTimeout(() => {
+        mask.classList.add('hidden');
+        mask.classList.remove('closing');
+      }, 180);
+    }
+
+    function openIntro() {
+      const mask = el('introMask');
+      mask.classList.remove('hidden', 'closing');
+    }
+
+    el('gotItBtn').addEventListener('click', closeIntro);
+    el('howBtn').addEventListener('click', openIntro);
+    el('introMask').addEventListener('click', (e) => {
+      if (e.target === el('introMask')) closeIntro();
+    });
+
     el('startBtn').addEventListener('click', () => {
+      closeIntro();
       index = 0;
       renderQ();
       showOnly('quiz');
