@@ -33,7 +33,7 @@
       justify-content: space-between;
       align-items: flex-start;
       gap: 16px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .brand-line { font-size: 15px; color: var(--muted); }
     .title {
@@ -56,33 +56,22 @@
       line-height: 1.1;
     }
 
-    .session-bar {
+    .status-row {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
       align-items: center;
-      margin-bottom: 16px;
-      font-size: 14px;
+      gap: 8px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--muted);
     }
-    .session-bar input {
-      background: var(--card);
-      border: 1px solid #2a3340;
-      color: var(--emph);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 14px;
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3a9;
     }
-    .session-bar button, .ctrl button, .manual button {
-      background: #2a3340;
-      border: none;
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .session-bar button:hover, .ctrl button:hover { background: #3a4558; }
-    .session-bar button.primary { background: var(--word); color: #fff; }
+    .status-dot.err { background: #c44; }
 
     .q-nav {
       display: flex;
@@ -202,6 +191,16 @@
       border-top: 1px solid #1e2530;
       margin-top: 12px;
     }
+    .ctrl button, .manual button {
+      background: #2a3340;
+      border: none;
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .ctrl button:hover { background: #3a4558; }
     .ctrl .danger { background: #5a2030; color: #ffd0d8; }
     .ctrl .accent { background: var(--real); color: #fff; }
     .footer {
@@ -240,25 +239,11 @@
       font-size: 14px;
       margin-bottom: 10px;
     }
-    .status-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #3a9;
-      margin-right: 6px;
-    }
-    .status-dot.err { background: #c44; }
-    .sync-hint {
-      font-size: 12px;
-      color: var(--muted);
-      margin-left: 8px;
-    }
   </style>
 </head>
 <body>
   <div id="cfgWarn" class="cfg-warn" style="display:none">
-    尚未配置 Supabase。请在 common.js 填入配置，并执行 schema.sql（含 game_state 表）。
+    尚未配置或无法连接。请确认 common.js 与 schema.sql。
   </div>
 
   <div class="top">
@@ -273,14 +258,9 @@
     </div>
   </div>
 
-  <div class="session-bar">
-    <span>场次</span>
-    <input id="sessionInput" type="text" maxlength="40" />
-    <button type="button" class="primary" id="sessionBtn">切换并广播</button>
-    <span class="sync-hint">手机自动跟此场次 / 当前题</span>
-    <span id="pollStatus" style="margin-left:auto;color:var(--muted);font-size:13px">
-      <span class="status-dot" id="dot"></span>轮询中…
-    </span>
+  <div class="status-row">
+    <span class="status-dot" id="dot"></span>
+    <span id="pollStatus">票数每 2 秒刷新 · 总结时用下方题号切换</span>
   </div>
 
   <div class="q-nav" id="qNav"></div>
@@ -314,8 +294,7 @@
     <button type="button" class="accent" id="btnReveal">揭晓</button>
     <button type="button" id="btnHideReveal">收起揭晓</button>
     <button type="button" id="btnManual">手动补票 ▾</button>
-    <button type="button" id="btnRestart">重新开始</button>
-    <button type="button" class="danger" id="btnClear">清空本场数据</button>
+    <button type="button" class="danger" id="btnClear">清空全部数据</button>
   </div>
 
   <div class="manual" id="manualPanel">
@@ -327,21 +306,18 @@
     <span style="font-size:12px;color:var(--muted)">举手统计兜底</span>
   </div>
 
-  <div class="footer">第 5 组 ·《德意志意识形态》第一章 · 切题会同步到手机</div>
+  <div class="footer">第 5 组 ·《德意志意识形态》第一章 · 大家答完后一起总结</div>
 
   <script type="module">
     import {
       QUESTIONS,
+      SESSION,
       LABEL,
-      getLocalSession,
-      setLocalSession,
       isConfigured,
       loadSupabase,
       tallyVotes,
       participantCount,
       animateNumber,
-      fetchGameState,
-      patchGameState,
     } from './common.js';
 
     const ANSWERS = {
@@ -355,12 +331,9 @@
 
     const el = (id) => document.getElementById(id);
     let supabase = null;
-    let session = getLocalSession();
     let currentQ = 1;
     let votesCache = [];
     let revealed = false;
-
-    el('sessionInput').value = session;
 
     const qNav = el('qNav');
     QUESTIONS.forEach((q) => {
@@ -372,29 +345,10 @@
       qNav.appendChild(b);
     });
 
-    async function broadcastState(extra = {}) {
-      if (!supabase) return;
-      try {
-        await patchGameState(supabase, {
-          session,
-          current_q: currentQ,
-          revealed,
-          ...extra,
-        });
-      } catch (e) {
-        console.error('广播状态失败', e);
-        el('dot').classList.add('err');
-        alert('同步到手机失败：请确认已执行最新 schema.sql（含 game_state 表）\n' + (e.message || e));
-      }
-    }
-
-    function setQuestion(q, opts = {}) {
-      const { keepReveal = false, skipBroadcast = false } = opts;
+    function setQuestion(q) {
       currentQ = q;
-      if (!keepReveal) {
-        revealed = false;
-        el('revealPanel').classList.remove('show');
-      }
+      revealed = false;
+      el('revealPanel').classList.remove('show');
       qNav.querySelectorAll('button').forEach((b) => {
         b.classList.toggle('active', Number(b.dataset.q) === currentQ);
       });
@@ -402,8 +356,6 @@
       el('stem').textContent = item.text;
       el('source').textContent = '出处：' + item.source;
       renderBars();
-      if (revealed) showRevealUI();
-      if (!skipBroadcast) broadcastState({ current_q: currentQ, revealed });
     }
 
     function renderBars() {
@@ -418,7 +370,7 @@
       el('realFill').style.height = Math.round((real / max) * 100) + '%';
     }
 
-    function showRevealUI() {
+    function showReveal() {
       const ans = ANSWERS[currentQ];
       const { word, real, total } = tallyVotes(votesCache, currentQ);
       const correct = ans === 'word' ? word : real;
@@ -431,56 +383,25 @@
       revealed = true;
     }
 
-    async function showReveal() {
-      showRevealUI();
-      await broadcastState({ revealed: true });
-    }
-
-    async function hideReveal() {
-      revealed = false;
-      el('revealPanel').classList.remove('show');
-      await broadcastState({ revealed: false });
-    }
-
     async function fetchVotes() {
       if (!supabase) return;
       try {
         const { data, error } = await supabase
           .from('votes')
           .select('q,a,client_id')
-          .eq('session', session);
+          .eq('session', SESSION);
         if (error) throw error;
         votesCache = data || [];
         el('dot').classList.remove('err');
-        el('pollStatus').innerHTML =
-          '<span class="status-dot" id="dot"></span>轮询中 · ' +
-          new Date().toLocaleTimeString();
+        el('pollStatus').textContent =
+          '票数每 2 秒刷新 · ' + new Date().toLocaleTimeString();
         renderBars();
-        if (revealed) showRevealUI();
+        if (revealed) showReveal();
       } catch (e) {
         el('dot').classList.add('err');
         console.error(e);
       }
     }
-
-    el('sessionBtn').addEventListener('click', async () => {
-      const v =
-        el('sessionInput').value.trim() ||
-        new Date().toISOString().slice(0, 10);
-      session = v;
-      setLocalSession(v);
-      el('sessionInput').value = v;
-      revealed = false;
-      el('revealPanel').classList.remove('show');
-      currentQ = 1;
-      setQuestion(1, { skipBroadcast: true });
-      await broadcastState({
-        session,
-        current_q: 1,
-        revealed: false,
-      });
-      await fetchVotes();
-    });
 
     el('btnPrev').addEventListener('click', () => {
       setQuestion(currentQ <= 1 ? 6 : currentQ - 1);
@@ -489,7 +410,10 @@
       setQuestion(currentQ >= 6 ? 1 : currentQ + 1);
     });
     el('btnReveal').addEventListener('click', showReveal);
-    el('btnHideReveal').addEventListener('click', hideReveal);
+    el('btnHideReveal').addEventListener('click', () => {
+      revealed = false;
+      el('revealPanel').classList.remove('show');
+    });
 
     el('btnManual').addEventListener('click', () => {
       el('manualPanel').classList.toggle('show');
@@ -502,13 +426,13 @@
       if (!supabase) return alert('未配置数据库');
       const w = Math.max(0, parseInt(el('manualWord').value, 10) || 0);
       const r = Math.max(0, parseInt(el('manualReal').value, 10) || 0);
-      if (!confirm(`将本题（第 ${currentQ} 题）票数覆盖为：词句 ${w} / 现实 ${r}？`)) return;
+      if (!confirm(`将第 ${currentQ} 题票数覆盖为：词句 ${w} / 现实 ${r}？`)) return;
 
       try {
         const { error: delErr } = await supabase
           .from('votes')
           .delete()
-          .eq('session', session)
+          .eq('session', SESSION)
           .eq('q', currentQ);
         if (delErr) throw delErr;
 
@@ -518,7 +442,7 @@
             client_id: `manual_w_${currentQ}_${i}`,
             q: currentQ,
             a: 'word',
-            session,
+            session: SESSION,
           });
         }
         for (let i = 0; i < r; i++) {
@@ -526,7 +450,7 @@
             client_id: `manual_r_${currentQ}_${i}`,
             q: currentQ,
             a: 'real',
-            session,
+            session: SESSION,
           });
         }
         if (rows.length) {
@@ -541,88 +465,40 @@
       }
     });
 
-    async function clearSessionVotes() {
-      if (!supabase) return alert('未配置数据库');
-      const { error } = await supabase.from('votes').delete().eq('session', session);
-      if (error) throw error;
-    }
-
     el('btnClear').addEventListener('click', async () => {
-      if (!confirm(`确认清空场次「${session}」的全部投票数据？`)) return;
+      if (!supabase) return alert('未配置数据库');
+      if (!confirm('确认清空全部投票数据？')) return;
       if (!confirm('再次确认：清空后不可恢复。')) return;
       try {
-        await clearSessionVotes();
+        const { error } = await supabase
+          .from('votes')
+          .delete()
+          .eq('session', SESSION);
+        if (error) throw error;
         revealed = false;
         el('revealPanel').classList.remove('show');
-        await broadcastState({ revealed: false });
         await fetchVotes();
       } catch (e) {
         alert('清空失败：' + (e.message || e));
       }
     });
 
-    el('btnRestart').addEventListener('click', async () => {
-      if (!confirm('重新开始：清空本场数据，回到第 1 题，并同步到手机？')) return;
-      try {
-        if (supabase) await clearSessionVotes();
-      } catch (e) {
-        alert('清空失败：' + (e.message || e));
-        return;
-      }
-      revealed = false;
-      el('revealPanel').classList.remove('show');
-      setQuestion(1, { skipBroadcast: true });
-      await broadcastState({ current_q: 1, revealed: false });
-      await fetchVotes();
-    });
-
     async function boot() {
+      setQuestion(1);
       if (!isConfigured()) {
         el('cfgWarn').style.display = 'block';
         el('dot').classList.add('err');
-        setQuestion(1, { skipBroadcast: true });
         return;
       }
-
       try {
         supabase = await loadSupabase();
+        await fetchVotes();
+        setInterval(fetchVotes, 2000);
       } catch (e) {
         el('cfgWarn').style.display = 'block';
-        el('cfgWarn').textContent = '加载 Supabase SDK 失败，请检查网络。' + (e.message || '');
+        el('cfgWarn').textContent = '加载失败：' + (e.message || e);
         el('dot').classList.add('err');
-        setQuestion(1, { skipBroadcast: true });
-        return;
       }
-
-      // 启动时拉取云端状态，与上次课/其他设备对齐
-      try {
-        const st = await fetchGameState(supabase);
-        if (st) {
-          session = st.session || session;
-          setLocalSession(session);
-          el('sessionInput').value = session;
-          currentQ = st.current_q || 1;
-          revealed = !!st.revealed;
-        } else {
-          await broadcastState({
-            session,
-            current_q: 1,
-            revealed: false,
-          });
-        }
-      } catch (e) {
-        console.warn(e);
-        el('cfgWarn').style.display = 'block';
-        el('cfgWarn').textContent =
-          '读不到 game_state。请到 Supabase SQL Editor 重新执行仓库里的 schema.sql。';
-      }
-
-      setQuestion(currentQ, { keepReveal: revealed, skipBroadcast: true });
-      if (revealed) showRevealUI();
-      // 确保手机端能读到当前状态
-      await broadcastState();
-      await fetchVotes();
-      setInterval(fetchVotes, 2000);
     }
 
     boot();
