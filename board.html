@@ -46,101 +46,31 @@
         radial-gradient(circle at 82% 78%, rgba(185, 71, 50, 0.05), transparent 55%);
       box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.5);
     }
-    .screen { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; min-height: 0; }
-    .hidden { display: none !important; }
-
-    /* ===== 首页：二维码 ===== */
-    #landing {
-      align-items: center;
-      justify-content: center;
-      padding: 40px 28px 32px;
-      text-align: center;
-    }
-    .land-eyebrow {
-      font-size: 16px;
-      color: var(--muted);
-      margin-bottom: 10px;
-      letter-spacing: 0.04em;
-    }
-    .land-title {
-      font-family: var(--serif);
-      font-size: clamp(36px, 5vw, 56px);
-      font-weight: 700;
-      color: var(--emph);
-      margin-bottom: 12px;
-    }
-    .land-sub {
-      font-size: 18px;
-      color: var(--muted);
-      margin-bottom: 28px;
-      line-height: 1.6;
-    }
-    .qr-wrap {
-      background: #fff;
-      padding: 18px;
-      border-radius: 14px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-      margin-bottom: 16px;
-    }
-    .qr-wrap img {
-      display: block;
-      width: min(320px, 55vw);
-      height: auto;
-    }
-    .qr-hint {
-      font-size: 15px;
-      color: var(--muted);
-      margin-bottom: 28px;
-      line-height: 1.55;
-    }
-    .qr-hint code {
-      font-size: 13px;
-      color: var(--real);
-      word-break: break-all;
-    }
-    .land-live {
-      font-size: 20px;
-      color: var(--muted);
-      margin-top: 8px;
-      margin-bottom: 18px;
-    }
-    .land-live strong {
-      font-size: 40px;
-      color: var(--emph);
-      font-weight: 700;
-      margin: 0 6px;
-    }
-    .btn-go {
-      min-height: 56px;
-      padding: 0 36px;
-      font-size: 20px;
-      font-weight: 700;
-      border: none;
-      border-radius: 10px;
-      background: var(--word);
-      color: #fff;
-      cursor: pointer;
-      font-family: var(--sans);
-    }
-    .btn-go:hover { filter: brightness(1.08); }
-
-    /* ===== 结果页：一屏装下，底栏不被裁切 ===== */
-    #results {
-      padding: 12px 24px 10px;
+    #board {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       height: 100%;
       max-height: 100dvh;
+      padding: 12px 20px 10px;
       overflow: hidden;
     }
+    .hidden { display: none !important; }
+
     .top {
       flex: 0 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       margin-bottom: 8px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
     }
+    .top-left { min-width: 0; }
     .brand-line { font-size: 13px; color: var(--muted); }
     .title {
       font-family: var(--serif);
@@ -149,18 +79,43 @@
       color: var(--emph);
       margin-top: 2px;
     }
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
     .participants {
       text-align: right;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--muted);
       white-space: nowrap;
     }
     .participants strong {
-      font-size: clamp(28px, 4vh, 36px);
+      font-size: clamp(26px, 3.8vh, 34px);
       color: var(--emph);
       font-weight: 700;
       display: block;
       line-height: 1.1;
+    }
+    .qr-corner {
+      background: #fff;
+      padding: 6px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+      flex-shrink: 0;
+    }
+    .qr-corner img {
+      display: block;
+      width: clamp(72px, 9vh, 100px);
+      height: auto;
+    }
+    .qr-cap {
+      font-size: 10px;
+      color: #6B6152;
+      text-align: center;
+      margin-top: 3px;
+      letter-spacing: 0.02em;
     }
 
     .status-row {
@@ -185,20 +140,136 @@
       gap: 6px;
       flex-wrap: nowrap;
       margin-bottom: 8px;
+      align-items: center;
     }
     .q-nav button {
       min-width: 40px; height: 34px; border-radius: 8px;
       border: 1px solid var(--border); background: var(--card);
-      color: var(--text); font-size: 15px; cursor: pointer;
-      font-family: var(--sans);
+      color: var(--text); font-size: 14px; cursor: pointer;
+      font-family: var(--sans); padding: 0 10px;
     }
     .q-nav button.active {
       background: var(--word); border-color: var(--word);
       color: #fff; font-weight: 700;
     }
+    .q-nav button.overview-btn {
+      min-width: 56px;
+      font-weight: 600;
+    }
+    .q-nav button.overview-btn.active {
+      background: var(--real);
+      border-color: var(--real);
+      color: #1C1914;
+    }
 
     .main {
       flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ===== 总览 ===== */
+    #viewOverview {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      gap: 10px;
+    }
+    .overview-head {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .overview-head h2 {
+      font-family: var(--serif);
+      font-size: clamp(18px, 2.2vh, 24px);
+      color: var(--emph);
+    }
+    .overview-head .avg {
+      font-size: clamp(16px, 2.2vh, 22px);
+      color: var(--real);
+      font-weight: 700;
+    }
+    .ov-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 10px;
+      min-height: 0;
+    }
+    .ov-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .ov-card:hover { border-color: var(--real); }
+    .ov-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      flex: 0 0 auto;
+    }
+    .ov-q {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .ov-ans {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .ov-ans.word { color: var(--word); }
+    .ov-ans.real { color: var(--real); }
+    .ov-pct {
+      font-size: clamp(28px, 5.5vh, 48px);
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--emph);
+      margin-bottom: 4px;
+      flex: 0 0 auto;
+    }
+    .ov-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      flex: 0 0 auto;
+    }
+    .ov-bar {
+      margin-top: auto;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border);
+      overflow: hidden;
+      display: flex;
+      flex: 0 0 auto;
+    }
+    .ov-bar .w { background: var(--word); height: 100%; }
+    .ov-bar .r { background: var(--real); height: 100%; }
+    .ov-split {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      flex: 0 0 auto;
+    }
+
+    /* ===== 单题 ===== */
+    #viewDetail {
+      flex: 1;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -223,7 +294,6 @@
       color: var(--muted);
       margin-bottom: 10px;
     }
-
     .bars {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -296,7 +366,6 @@
     }
     .reveal-rate span { color: var(--muted); font-size: 16px; font-weight: 500; }
 
-    /* 底栏固定在屏幕内，不被 overflow 裁掉 */
     .dock {
       flex: 0 0 auto;
       margin-top: 8px;
@@ -363,36 +432,32 @@
       font-size: 13px;
       margin-bottom: 8px;
     }
+    @media (max-width: 900px) {
+      .ov-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
-  <!-- 首页：二维码 -->
-  <div id="landing" class="screen">
-    <div class="land-eyebrow">第 5 组 ·《德意志意识形态》第一章</div>
-    <h1 class="land-title">词句审判庭</h1>
-    <p class="land-sub">请用手机扫描下方二维码答题<br />答完后抬头看投影，一起总结</p>
-    <div class="qr-wrap">
-      <img src="./qr-vote.png" alt="扫码答题二维码" width="320" height="320" />
-    </div>
-    <div class="land-live">已有 <strong id="landPart" data-value="0">0</strong> 人参与</div>
-    <button type="button" class="btn-go" id="btnToResults">进入答题情况 →</button>
-  </div>
-
-  <!-- 结果页 -->
-  <div id="results" class="screen hidden">
+  <div id="board">
     <div id="cfgWarn" class="cfg-warn" style="display:none">
       尚未配置或无法连接。请确认 common.js 与 schema.sql。
     </div>
 
     <div class="top">
-      <div>
+      <div class="top-left">
         <div class="brand-line">第 5 组 ·《德意志意识形态》第一章</div>
         <div class="title">词句审判庭 · 答题情况</div>
       </div>
-      <div class="participants">
-        已参与
-        <strong id="partCount" data-value="0">0</strong>
-        人
+      <div class="top-right">
+        <div class="participants">
+          已参与
+          <strong id="partCount" data-value="0">0</strong>
+          人
+        </div>
+        <div class="qr-corner">
+          <img src="./qr-vote.png" alt="扫码答题" width="100" height="100" />
+          <div class="qr-cap">扫码答题</div>
+        </div>
       </div>
     </div>
 
@@ -401,34 +466,46 @@
       <span id="pollStatus">票数每 2 秒刷新</span>
     </div>
 
-    <div class="q-nav" id="qNav"></div>
+    <div class="q-nav" id="qNav">
+      <button type="button" class="overview-btn active" id="btnOverview" data-view="overview">总览</button>
+    </div>
 
     <div class="main">
-      <div class="stem" id="stem"></div>
-      <div class="source" id="source"></div>
-
-      <div class="bars">
-        <div class="col word">
-          <div class="col-label">词句</div>
-          <div class="count" id="wordCount" data-value="0">0</div>
-          <div class="track"><div class="fill" id="wordFill"></div></div>
+      <!-- 六道正确率总览 -->
+      <div id="viewOverview">
+        <div class="overview-head">
+          <h2>六道题正确率总览</h2>
+          <div class="avg">平均正确率 <span id="avgPct">—</span></div>
         </div>
-        <div class="col real">
-          <div class="col-label">现实</div>
-          <div class="count" id="realCount" data-value="0">0</div>
-          <div class="track"><div class="fill" id="realFill"></div></div>
-        </div>
+        <div class="ov-grid" id="ovGrid"></div>
       </div>
 
-      <div class="reveal-panel" id="revealPanel">
-        <div class="reveal-answer" id="revealAnswer"></div>
-        <div class="reveal-rate" id="revealRate"></div>
+      <!-- 单题详情 -->
+      <div id="viewDetail" class="hidden">
+        <div class="stem" id="stem"></div>
+        <div class="source" id="source"></div>
+        <div class="bars">
+          <div class="col word">
+            <div class="col-label">词句</div>
+            <div class="count" id="wordCount" data-value="0">0</div>
+            <div class="track"><div class="fill" id="wordFill"></div></div>
+          </div>
+          <div class="col real">
+            <div class="col-label">现实</div>
+            <div class="count" id="realCount" data-value="0">0</div>
+            <div class="track"><div class="fill" id="realFill"></div></div>
+          </div>
+        </div>
+        <div class="reveal-panel" id="revealPanel">
+          <div class="reveal-answer" id="revealAnswer"></div>
+          <div class="reveal-rate" id="revealRate"></div>
+        </div>
       </div>
     </div>
 
     <div class="dock">
       <div class="ctrl">
-        <button type="button" class="primary" id="btnBackQr">← 返回二维码</button>
+        <button type="button" class="primary" id="btnToOverview">← 返回总览</button>
         <button type="button" id="btnPrev">上一题</button>
         <button type="button" id="btnNext">下一题</button>
         <button type="button" class="accent" id="btnReveal">揭晓</button>
@@ -444,7 +521,7 @@
         <button type="button" id="manualApply">填入（覆盖本题统计）</button>
         <span style="font-size:12px;color:var(--muted)">举手统计兜底</span>
       </div>
-      <div class="footer">第 5 组 ·《德意志意识形态》第一章 · 大家答完后一起总结</div>
+      <div class="footer">第 5 组 ·《德意志意识形态》第一章 · 扫右上角码答题</div>
     </div>
   </div>
 
@@ -466,17 +543,8 @@
     let currentQ = 1;
     let votesCache = [];
     let revealed = false;
-    let onResults = false;
+    let view = 'overview'; // overview | detail
     let ready = false;
-
-    function showScreen(name) {
-      onResults = name === 'results';
-      el('landing').classList.toggle('hidden', name !== 'landing');
-      el('results').classList.toggle('hidden', name !== 'results');
-    }
-
-    el('btnToResults').addEventListener('click', () => showScreen('results'));
-    el('btnBackQr').addEventListener('click', () => showScreen('landing'));
 
     const qNav = el('qNav');
     QUESTIONS.forEach((q) => {
@@ -484,45 +552,127 @@
       b.type = 'button';
       b.textContent = String(q.q);
       b.dataset.q = String(q.q);
-      b.addEventListener('click', () => setQuestion(q.q));
+      b.addEventListener('click', () => showDetail(q.q));
       qNav.appendChild(b);
     });
 
-    function setQuestion(q) {
+    // 预建总览卡片
+    const ovGrid = el('ovGrid');
+    QUESTIONS.forEach((q) => {
+      const card = document.createElement('div');
+      card.className = 'ov-card';
+      card.dataset.q = String(q.q);
+      card.innerHTML =
+        `<div class="ov-top">` +
+        `<span class="ov-q">第 ${q.q} 题</span>` +
+        `<span class="ov-ans ${ANSWERS[q.q]}" id="ovAns${q.q}">答案 · ${LABEL[ANSWERS[q.q]]}</span>` +
+        `</div>` +
+        `<div class="ov-pct" id="ovPct${q.q}">—</div>` +
+        `<div class="ov-meta" id="ovMeta${q.q}">暂无投票</div>` +
+        `<div class="ov-bar"><div class="w" id="ovW${q.q}" style="width:0%"></div>` +
+        `<div class="r" id="ovR${q.q}" style="width:0%"></div></div>` +
+        `<div class="ov-split"><span id="ovWord${q.q}">词句 0</span><span id="ovReal${q.q}">现实 0</span></div>`;
+      card.addEventListener('click', () => showDetail(q.q));
+      ovGrid.appendChild(card);
+    });
+
+    function setNavActive() {
+      el('btnOverview').classList.toggle('active', view === 'overview');
+      qNav.querySelectorAll('button[data-q]').forEach((b) => {
+        b.classList.toggle('active', view === 'detail' && Number(b.dataset.q) === currentQ);
+      });
+    }
+
+    function showOverview() {
+      view = 'overview';
+      revealed = false;
+      el('revealPanel').classList.remove('show');
+      el('viewOverview').classList.remove('hidden');
+      el('viewDetail').classList.add('hidden');
+      el('btnToOverview').classList.add('hidden');
+      el('btnPrev').classList.add('hidden');
+      el('btnNext').classList.add('hidden');
+      el('btnReveal').classList.add('hidden');
+      el('btnHideReveal').classList.add('hidden');
+      el('btnManual').classList.add('hidden');
+      el('manualPanel').classList.remove('show');
+      setNavActive();
+      renderOverview();
+    }
+
+    function showDetail(q) {
+      view = 'detail';
       currentQ = q;
       revealed = false;
       el('revealPanel').classList.remove('show');
-      qNav.querySelectorAll('button').forEach((b) => {
-        b.classList.toggle('active', Number(b.dataset.q) === currentQ);
-      });
+      el('viewOverview').classList.add('hidden');
+      el('viewDetail').classList.remove('hidden');
+      el('btnToOverview').classList.remove('hidden');
+      el('btnPrev').classList.remove('hidden');
+      el('btnNext').classList.remove('hidden');
+      el('btnReveal').classList.remove('hidden');
+      el('btnHideReveal').classList.remove('hidden');
+      el('btnManual').classList.remove('hidden');
       const item = QUESTIONS.find((x) => x.q === currentQ);
       el('stem').textContent = item.text;
       el('source').textContent = '出处：' + item.source;
-      renderBars();
+      setNavActive();
+      renderDetail();
     }
 
-    function renderBars() {
+    function qStats(q) {
+      const { word, real, total } = tallyVotes(votesCache, q);
+      const ans = ANSWERS[q];
+      const correct = ans === 'word' ? word : real;
+      const pct = total ? Math.round((correct / total) * 100) : null;
+      return { word, real, total, correct, pct, ans };
+    }
+
+    function renderOverview() {
+      let sumPct = 0;
+      let counted = 0;
+      QUESTIONS.forEach((q) => {
+        const s = qStats(q.q);
+        const pctEl = el('ovPct' + q.q);
+        const metaEl = el('ovMeta' + q.q);
+        if (s.total === 0) {
+          pctEl.textContent = '—';
+          metaEl.textContent = '暂无投票';
+        } else {
+          pctEl.textContent = s.pct + '%';
+          metaEl.textContent = `判对 ${s.correct} / ${s.total} 人`;
+          sumPct += s.pct;
+          counted += 1;
+        }
+        const wPct = s.total ? Math.round((s.word / s.total) * 100) : 0;
+        const rPct = s.total ? 100 - wPct : 0;
+        el('ovW' + q.q).style.width = wPct + '%';
+        el('ovR' + q.q).style.width = rPct + '%';
+        el('ovWord' + q.q).textContent = '词句 ' + s.word;
+        el('ovReal' + q.q).textContent = '现实 ' + s.real;
+      });
+      el('avgPct').textContent = counted ? Math.round(sumPct / counted) + '%' : '—';
+      animateNumber(el('partCount'), participantCount(votesCache));
+    }
+
+    function renderDetail() {
       const { word, real } = tallyVotes(votesCache, currentQ);
       const parts = participantCount(votesCache);
       animateNumber(el('wordCount'), word);
       animateNumber(el('realCount'), real);
       animateNumber(el('partCount'), parts);
-      animateNumber(el('landPart'), parts);
-
       const max = Math.max(word, real, 1);
       el('wordFill').style.height = Math.round((word / max) * 100) + '%';
       el('realFill').style.height = Math.round((real / max) * 100) + '%';
+      if (revealed) showReveal();
     }
 
     function showReveal() {
-      const ans = ANSWERS[currentQ];
-      const { word, real, total } = tallyVotes(votesCache, currentQ);
-      const correct = ans === 'word' ? word : real;
-      const pct = total ? Math.round((correct / total) * 100) : 0;
-      el('revealAnswer').textContent = '正确答案：' + LABEL[ans];
+      const s = qStats(currentQ);
+      el('revealAnswer').textContent = '正确答案：' + LABEL[s.ans];
       el('revealRate').innerHTML =
-        `本轮判对 ${correct} / ${total} 人（${pct}%）` +
-        `<br><span>词句 ${word} · 现实 ${real}</span>`;
+        `本轮判对 ${s.correct} / ${s.total} 人（${s.pct == null ? '—' : s.pct + '%'}）` +
+        `<br><span>词句 ${s.word} · 现实 ${s.real}</span>`;
       el('revealPanel').classList.add('show');
       revealed = true;
     }
@@ -534,8 +684,8 @@
         el('dot').classList.remove('err');
         el('pollStatus').textContent =
           '票数每 2 秒刷新 · ' + new Date().toLocaleTimeString();
-        renderBars();
-        if (revealed && onResults) showReveal();
+        if (view === 'overview') renderOverview();
+        else renderDetail();
       } catch (e) {
         el('dot').classList.add('err');
         el('pollStatus').textContent = '读取票数失败，请刷新页面';
@@ -543,11 +693,13 @@
       }
     }
 
+    el('btnOverview').addEventListener('click', showOverview);
+    el('btnToOverview').addEventListener('click', showOverview);
     el('btnPrev').addEventListener('click', () => {
-      setQuestion(currentQ <= 1 ? 6 : currentQ - 1);
+      showDetail(currentQ <= 1 ? 6 : currentQ - 1);
     });
     el('btnNext').addEventListener('click', () => {
-      setQuestion(currentQ >= 6 ? 1 : currentQ + 1);
+      showDetail(currentQ >= 6 ? 1 : currentQ + 1);
     });
     el('btnReveal').addEventListener('click', showReveal);
     el('btnHideReveal').addEventListener('click', () => {
@@ -567,13 +719,11 @@
       const w = Math.max(0, parseInt(el('manualWord').value, 10) || 0);
       const r = Math.max(0, parseInt(el('manualReal').value, 10) || 0);
       if (!confirm(`将第 ${currentQ} 题票数覆盖为：词句 ${w} / 现实 ${r}？`)) return;
-
       try {
         await replaceQuestionVotes(currentQ, w, r);
         await fetchVotes();
         alert('已填入');
       } catch (e) {
-        console.error(e);
         alert('填入失败：' + (e.message || e));
       }
     });
@@ -593,8 +743,7 @@
     });
 
     async function boot() {
-      setQuestion(1);
-      showScreen('landing');
+      showOverview();
       if (!isConfigured()) {
         el('cfgWarn').style.display = 'block';
         el('dot').classList.add('err');
