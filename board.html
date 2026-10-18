@@ -101,7 +101,8 @@
     .land-live {
       font-size: 20px;
       color: var(--muted);
-      margin-bottom: 28px;
+      margin-top: 8px;
+      margin-bottom: 18px;
     }
     .land-live strong {
       font-size: 40px;
@@ -373,9 +374,7 @@
     <div class="qr-wrap">
       <img src="./qr-vote.png" alt="扫码答题二维码" width="320" height="320" />
     </div>
-    <p class="qr-hint">连不上？手机浏览器打开<br /><code id="voteUrlText"></code></p>
     <div class="land-live">已有 <strong id="landPart" data-value="0">0</strong> 人参与</div>
-    <p class="qr-hint" style="margin-top:-12px;margin-bottom:22px">同一手机重复提交不会加票（只覆盖）· 票数在下一页</p>
     <button type="button" class="btn-go" id="btnToResults">进入答题情况 →</button>
   </div>
 
@@ -454,7 +453,6 @@
       QUESTIONS,
       LABEL,
       ANSWERS,
-      VOTE_URL,
       isConfigured,
       fetchVotes as apiFetchVotes,
       clearVotes,
@@ -470,8 +468,6 @@
     let revealed = false;
     let onResults = false;
     let ready = false;
-
-    el('voteUrlText').textContent = VOTE_URL;
 
     function showScreen(name) {
       onResults = name === 'results';
