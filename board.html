@@ -67,8 +67,68 @@
       align-items: center;
       gap: 16px;
       margin-bottom: 8px;
-      padding-bottom: 8px;
+    }
+
+    /* 马克思旁白 */
+    .marx-row {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 8px;
+      padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
+    }
+    .marx-avatar {
+      width: clamp(56px, 8vh, 72px);
+      height: clamp(56px, 8vh, 72px);
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--real);
+      flex-shrink: 0;
+      background: #2E2820;
+    }
+    .marx-bubble {
+      flex: 1;
+      min-width: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .marx-bubble::before {
+      content: "";
+      position: absolute;
+      left: -7px;
+      top: 22px;
+      width: 12px;
+      height: 12px;
+      background: var(--card);
+      border-left: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transform: rotate(45deg);
+    }
+    .marx-name {
+      font-size: 12px;
+      color: var(--real);
+      font-weight: 700;
+      margin-bottom: 4px;
+      letter-spacing: 0.04em;
+    }
+    .marx-text {
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.8vh, 17px);
+      line-height: 1.55;
+      color: var(--emph);
+    }
+    .marx-tag {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
     }
     .top-left { min-width: 0; }
     .brand-line { font-size: 13px; color: var(--muted); }
@@ -528,6 +588,15 @@
       </div>
     </div>
 
+    <div class="marx-row" id="marxRow">
+      <img class="marx-avatar" src="./marx-portrait.jpg" alt="马克思" width="72" height="72" />
+      <div class="marx-bubble">
+        <div class="marx-name">马克思旁白</div>
+        <div class="marx-text" id="marxText">人还没齐呢。等大家扫码答完，我再开口。不着急。</div>
+        <div class="marx-tag" id="marxTag">总览 · 尚无数据</div>
+      </div>
+    </div>
+
     <div id="qrModal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-label="扫码答题">
       <div class="qr-modal-box" id="qrModalBox">
         <img src="./qr-vote.png" alt="扫码答题大图" width="420" height="420" />
@@ -614,6 +683,7 @@
       participantCount,
       animateNumber,
     } from './common.js';
+    import { marxSay, tierName } from './marx-comments.js';
 
     const el = (id) => document.getElementById(id);
     let currentQ = 1;
@@ -704,6 +774,26 @@
       return { word, real, total, correct, pct, ans };
     }
 
+    function updateMarx(mode, pct, q) {
+      const text = marxSay(mode, pct, q);
+      const node = el('marxText');
+      if (node.textContent !== text) {
+        node.style.opacity = '0.35';
+        setTimeout(() => {
+          node.textContent = text;
+          node.style.opacity = '1';
+        }, 120);
+      }
+      node.style.transition = 'opacity 0.2s ease';
+      if (mode === 'overview') {
+        el('marxTag').textContent =
+          '总览 · ' + (pct == null ? '尚无数据' : '平均正确率 ' + pct + '% · ' + tierName(pct));
+      } else {
+        el('marxTag').textContent =
+          '第 ' + q + ' 题 · ' + (pct == null ? '尚无数据' : '正确率 ' + pct + '% · ' + tierName(pct));
+      }
+    }
+
     function renderOverview() {
       let sumPct = 0;
       let counted = 0;
@@ -727,8 +817,10 @@
         el('ovWord' + q.q).textContent = '词句 ' + s.word;
         el('ovReal' + q.q).textContent = '现实 ' + s.real;
       });
-      el('avgPct').textContent = counted ? Math.round(sumPct / counted) + '%' : '—';
+      const avg = counted ? Math.round(sumPct / counted) : null;
+      el('avgPct').textContent = avg == null ? '—' : avg + '%';
       animateNumber(el('partCount'), participantCount(votesCache));
+      updateMarx('overview', avg);
     }
 
     function renderDetail() {
@@ -740,6 +832,8 @@
       const max = Math.max(word, real, 1);
       el('wordFill').style.height = Math.round((word / max) * 100) + '%';
       el('realFill').style.height = Math.round((real / max) * 100) + '%';
+      const s = qStats(currentQ);
+      updateMarx('detail', s.pct, currentQ);
       if (revealed) showReveal();
     }
 
