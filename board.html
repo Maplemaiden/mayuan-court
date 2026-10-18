@@ -104,11 +104,18 @@
       border-radius: 10px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.35);
       flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .qr-corner:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
     }
     .qr-corner img {
       display: block;
       width: clamp(140px, 18vh, 200px);
       height: auto;
+      pointer-events: none;
     }
     .qr-cap {
       font-size: 13px;
@@ -117,6 +124,65 @@
       margin-top: 6px;
       letter-spacing: 0.02em;
       font-weight: 600;
+      pointer-events: none;
+    }
+
+    /* 大二维码弹层 */
+    .qr-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(12, 10, 8, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: qrFadeIn 0.2s ease;
+    }
+    .qr-modal.closing { animation: qrFadeOut 0.18s ease forwards; }
+    @keyframes qrFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes qrFadeOut { from { opacity: 1; } to { opacity: 0; } }
+    .qr-modal-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 28px 20px;
+      text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      animation: qrPop 0.22s ease;
+    }
+    @keyframes qrPop {
+      from { transform: scale(0.92); opacity: 0.7; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .qr-modal-box img {
+      display: block;
+      width: min(420px, 70vw, 70vh);
+      height: auto;
+      margin: 0 auto;
+    }
+    .qr-modal-title {
+      margin-top: 14px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1C1914;
+      font-family: var(--sans);
+    }
+    .qr-modal-hint {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #6B6152;
+    }
+    .qr-modal-close {
+      margin-top: 16px;
+      min-height: 44px;
+      padding: 0 28px;
+      border: none;
+      border-radius: 8px;
+      background: #B94732;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .status-row {
@@ -455,10 +521,19 @@
           <strong id="partCount" data-value="0">0</strong>
           人
         </div>
-        <div class="qr-corner">
-          <img src="./qr-vote.png" alt="扫码答题" width="100" height="100" />
-          <div class="qr-cap">扫码答题</div>
+        <div class="qr-corner" id="qrCorner" title="点击放大" role="button" tabindex="0">
+          <img src="./qr-vote.png" alt="扫码答题" width="200" height="200" />
+          <div class="qr-cap">点击放大</div>
         </div>
+      </div>
+    </div>
+
+    <div id="qrModal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-label="扫码答题">
+      <div class="qr-modal-box" id="qrModalBox">
+        <img src="./qr-vote.png" alt="扫码答题大图" width="420" height="420" />
+        <div class="qr-modal-title">扫码答题</div>
+        <div class="qr-modal-hint">用手机扫描此码进入投票页</div>
+        <button type="button" class="qr-modal-close" id="qrModalClose">关闭</button>
       </div>
     </div>
 
@@ -693,6 +768,33 @@
         console.error(e);
       }
     }
+
+    function openQrModal() {
+      el('qrModal').classList.remove('hidden', 'closing');
+    }
+    function closeQrModal() {
+      const m = el('qrModal');
+      if (m.classList.contains('hidden')) return;
+      m.classList.add('closing');
+      setTimeout(() => {
+        m.classList.add('hidden');
+        m.classList.remove('closing');
+      }, 160);
+    }
+    el('qrCorner').addEventListener('click', openQrModal);
+    el('qrCorner').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openQrModal();
+      }
+    });
+    el('qrModalClose').addEventListener('click', closeQrModal);
+    el('qrModal').addEventListener('click', (e) => {
+      if (e.target === el('qrModal')) closeQrModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeQrModal();
+    });
 
     el('btnOverview').addEventListener('click', showOverview);
     el('btnToOverview').addEventListener('click', showOverview);
