@@ -18,6 +18,8 @@
       --muted: #8C8171;
       --border: #3A3227;
       --emph: #E8E1D3;
+      --ok: #5A9A5A;
+      --bad: #C44A3A;
       --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, serif;
       --sans: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     }
@@ -39,7 +41,6 @@
       margin: 0 auto;
       position: relative;
     }
-    /* 纸纹 + 暗角 */
     body::before {
       content: "";
       position: fixed;
@@ -53,29 +54,17 @@
     }
     body > * { position: relative; z-index: 1; }
 
-    .eyebrow {
-      font-size: 13px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      margin-bottom: 8px;
-    }
+    .eyebrow { font-size: 13px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 8px; }
     .brand {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--emph);
-      margin-bottom: 16px;
-      font-family: var(--serif);
+      font-size: 20px; font-weight: 700; color: var(--emph);
+      margin-bottom: 16px; font-family: var(--serif);
     }
     .rule {
       height: 1px;
       background: linear-gradient(90deg, transparent, #4A4033, transparent);
       margin-bottom: 14px;
     }
-    .progress {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
+    .progress { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
     .progress strong { color: var(--emph); font-size: 14px; font-weight: 600; }
     .card {
       background: var(--card);
@@ -85,6 +74,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
     .q-text {
       font-family: var(--serif);
@@ -92,73 +82,126 @@
       line-height: 1.7;
       font-weight: 600;
       color: var(--emph);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       flex: 1;
     }
-    .options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .feedback {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      min-height: 28px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
+    .feedback.show { opacity: 1; }
+    .feedback.ok { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    .options { display: flex; flex-direction: column; gap: 12px; }
     .opt {
       min-height: 64px;
       border: 1px solid var(--border);
       border-radius: 10px;
       background: var(--card);
-      padding: 14px 14px;
+      padding: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 12px;
       text-align: left;
       color: var(--text);
-      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
       -webkit-user-select: none;
       user-select: none;
       font-family: var(--sans);
     }
     .opt:active { transform: scale(0.98); }
-    .opt:disabled { opacity: 0.55; cursor: default; }
+    .opt:disabled { cursor: default; }
     .opt .dot {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 1.5px solid #4A4033;
-      flex: 0 0 auto;
-      position: relative;
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid #4A4033; flex: 0 0 auto; position: relative;
     }
     .opt.word .dot { border-color: var(--word); }
     .opt.real .dot { border-color: var(--real); }
-    .opt.picked .dot::after {
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-    .opt.word.picked { border-color: var(--word); background: rgba(185, 71, 50, 0.12); color: var(--word); }
-    .opt.real.picked { border-color: var(--real); background: rgba(202, 167, 101, 0.12); color: var(--real); }
-    .opt .ot { font-size: 17px; font-weight: 600; color: var(--emph); }
-    .opt.picked .ot { color: inherit; }
-    .opt .os { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
-    .opt .check { margin-left: auto; font-size: 16px; opacity: 0; color: inherit; }
-    .opt.picked .check { opacity: 1; }
-
-    .gate, .done {
-      text-align: center;
-      padding: 36px 12px;
-    }
-    .gate h2, .done h2 {
-      font-family: var(--serif);
+    .opt .ot { font-size: 17px; font-weight: 600; color: var(--emph); display: block; }
+    .opt .os { font-size: 12.5px; color: var(--muted); margin-top: 2px; display: block; }
+    .opt .mark {
+      margin-left: auto;
       font-size: 22px;
-      margin-bottom: 12px;
+      font-weight: 700;
+      width: 28px;
+      text-align: center;
+      opacity: 0;
+    }
+    .opt.correct {
+      border-color: var(--ok);
+      background: rgba(90, 154, 90, 0.14);
+    }
+    .opt.correct .mark { opacity: 1; color: var(--ok); }
+    .opt.wrong {
+      border-color: var(--bad);
+      background: rgba(196, 74, 58, 0.14);
+    }
+    .opt.wrong .mark { opacity: 1; color: var(--bad); }
+    .opt.dim { opacity: 0.45; }
+
+    .gate, .done-head { text-align: center; padding: 28px 8px 8px; }
+    .gate h2, .done-head h2 {
+      font-family: var(--serif); font-size: 22px; margin-bottom: 12px; color: var(--emph);
+    }
+    .gate p { font-size: 15px; color: var(--muted); line-height: 1.65; }
+    .score-big {
+      font-size: 48px;
+      font-weight: 700;
       color: var(--emph);
+      line-height: 1.1;
+      margin: 8px 0 6px;
+      font-family: var(--sans);
     }
-    .gate p, .done p {
-      font-size: 15px;
+    .score-sub { font-size: 16px; color: var(--muted); margin-bottom: 18px; }
+
+    .review {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 2px;
+      text-align: left;
+    }
+    .rev-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      background: #221E18;
+    }
+    .rev-item.ok { border-color: rgba(90, 154, 90, 0.45); }
+    .rev-item.bad { border-color: rgba(196, 74, 58, 0.45); }
+    .rev-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
       color: var(--muted);
-      line-height: 1.65;
     }
+    .rev-badge {
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .rev-badge.ok { color: var(--ok); }
+    .rev-badge.bad { color: var(--bad); }
+    .rev-q {
+      font-family: var(--serif);
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--emph);
+      margin-bottom: 8px;
+    }
+    .rev-meta { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
     .start-btn {
       margin-top: 18px;
       min-height: 52px;
@@ -191,36 +234,20 @@
     }
     .toast.show { display: block; }
     .toast button {
-      margin-top: 10px;
-      min-height: 40px;
-      padding: 0 18px;
-      border: none;
-      border-radius: 8px;
-      background: var(--word);
-      color: #fff;
-      font-size: 15px;
-      cursor: pointer;
+      margin-top: 10px; min-height: 40px; padding: 0 18px;
+      border: none; border-radius: 8px; background: var(--word);
+      color: #fff; font-size: 15px; cursor: pointer;
     }
     .hidden { display: none !important; }
     .cfg-warn {
-      background: #3A2A20;
-      color: #E8C090;
-      border: 1px solid #5A4030;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      margin-bottom: 12px;
-      line-height: 1.5;
+      background: #3A2A20; color: #E8C090; border: 1px solid #5A4030;
+      padding: 12px; border-radius: 8px; font-size: 14px;
+      margin-bottom: 12px; line-height: 1.5;
     }
 
     .modal-mask {
-      position: fixed;
-      inset: 0;
-      background: rgba(12, 10, 8, 0.78);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; inset: 0; background: rgba(12, 10, 8, 0.78);
+      z-index: 200; display: flex; align-items: center; justify-content: center;
       padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
       animation: fadeIn 0.25s ease;
     }
@@ -228,13 +255,9 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     .modal {
-      width: 100%;
-      max-width: 360px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px 20px 20px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      width: 100%; max-width: 360px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 24px 20px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
       animation: slideUp 0.28s ease;
     }
     @keyframes slideUp {
@@ -242,58 +265,25 @@
       to { transform: translateY(0); opacity: 1; }
     }
     .modal h2 {
-      font-family: var(--serif);
-      font-size: 20px;
-      color: var(--emph);
-      margin-bottom: 14px;
-      text-align: center;
+      font-family: var(--serif); font-size: 20px; color: var(--emph);
+      margin-bottom: 14px; text-align: center;
     }
-    .modal .lead {
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.65;
-      margin-bottom: 14px;
-    }
-    .modal .tags {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
+    .modal .lead { font-size: 15px; color: var(--text); line-height: 1.65; margin-bottom: 14px; }
+    .modal .tags { display: flex; gap: 8px; margin-bottom: 14px; }
     .modal .tag {
-      flex: 1;
-      text-align: center;
-      padding: 10px 8px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
+      flex: 1; text-align: center; padding: 10px 8px; border-radius: 8px;
+      font-size: 14px; font-weight: 700; color: #fff;
     }
     .modal .tag.word { background: var(--word); }
     .modal .tag.real { background: var(--real); color: #1C1914; }
     .modal .tag small {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      opacity: 0.9;
-      margin-top: 4px;
+      display: block; font-size: 12px; font-weight: 500; opacity: 0.9; margin-top: 4px;
     }
-    .modal .tips {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.55;
-      margin-bottom: 18px;
-    }
+    .modal .tips { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 18px; }
     .modal .got-it {
-      width: 100%;
-      min-height: 52px;
-      border: none;
-      border-radius: 10px;
-      background: var(--word);
-      color: #fff;
-      font-size: 17px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--sans);
+      width: 100%; min-height: 52px; border: none; border-radius: 10px;
+      background: var(--word); color: #fff; font-size: 17px; font-weight: 600;
+      cursor: pointer; font-family: var(--sans);
     }
   </style>
 </head>
@@ -309,14 +299,12 @@
         <div class="tag word">词句<small>只换说法，没碰现实</small></div>
         <div class="tag real">现实<small>落到物质与生活</small></div>
       </div>
-      <p class="tips">不记名 · 共 6 题 · 点选项即提交<br />答完请抬头看投影，一起总结。</p>
+      <p class="tips">不记名 · 共 6 题 · 点完立刻看对错<br />答完有正确率与回顾。</p>
       <button type="button" class="got-it" id="gotItBtn">知道了</button>
     </div>
   </div>
 
-  <div id="cfgWarn" class="cfg-warn hidden">
-    尚未配置或无法连接数据库。
-  </div>
+  <div id="cfgWarn" class="cfg-warn hidden">尚未配置或无法连接数据库。</div>
 
   <div class="eyebrow">第 5 组 ·《德意志意识形态》第一章</div>
   <div class="brand">词句审判庭</div>
@@ -325,7 +313,7 @@
     <div class="rule" style="margin:0 0 18px"></div>
     <h2>六道判断题</h2>
     <p>这句话是「只讲了词句」，还是「碰到了现实」？</p>
-    <p style="margin-top:12px">不记名 · 点选项即提交 · 答完看投影总结</p>
+    <p style="margin-top:12px">点选项即提交 · 立刻显示对错</p>
     <button type="button" class="start-btn" id="howBtn" style="background:transparent;border:1px solid var(--border);color:var(--text);margin-top:12px;margin-bottom:0;font-weight:500;font-size:15px;min-height:44px">再看一遍说明</button>
     <button class="start-btn" id="startBtn" type="button">开始答题</button>
   </div>
@@ -335,31 +323,37 @@
     <div class="progress">第 <strong id="qNum">1</strong> / 6 题 · <span id="qSource">P142–143</span></div>
     <div class="card">
       <div class="q-text" id="qText"></div>
+      <div class="feedback" id="feedback"></div>
       <div class="options">
         <button type="button" class="opt word" data-a="word">
           <span class="dot"></span>
           <span style="flex:1">
-            <span class="ot" style="display:block">词句</span>
-            <span class="os" style="display:block">只换说法，没碰现实</span>
+            <span class="ot">词句</span>
+            <span class="os">只换说法，没碰现实</span>
           </span>
-          <span class="check">✓</span>
+          <span class="mark" aria-hidden="true"></span>
         </button>
         <button type="button" class="opt real" data-a="real">
           <span class="dot"></span>
           <span style="flex:1">
-            <span class="ot" style="display:block">现实</span>
-            <span class="os" style="display:block">落到物质与生活</span>
+            <span class="ot">现实</span>
+            <span class="os">落到物质与生活</span>
           </span>
-          <span class="check">✓</span>
+          <span class="mark" aria-hidden="true"></span>
         </button>
       </div>
     </div>
   </div>
 
-  <div id="done" class="card done hidden">
-    <div class="rule" style="margin:0 0 18px"></div>
-    <h2>全部作答完成</h2>
-    <p>请抬头看投影，一起做总结。</p>
+  <div id="done" class="card hidden" style="overflow:hidden">
+    <div class="done-head">
+      <div class="rule" style="margin:0 0 14px"></div>
+      <h2>答题完成</h2>
+      <div class="score-big" id="scoreBig">0 / 6</div>
+      <div class="score-sub" id="scoreSub">正确率 0%</div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:14px">请抬头看投影，一起总结。</p>
+    </div>
+    <div class="review" id="review"></div>
   </div>
 
   <div id="toast" class="toast"></div>
@@ -368,6 +362,8 @@
     import {
       QUESTIONS,
       SESSION,
+      ANSWERS,
+      LABEL,
       getClientId,
       isConfigured,
       loadSupabase,
@@ -379,6 +375,8 @@
     let index = 0;
     let submitting = false;
     let pendingRetry = null;
+    /** @type {{q:number,a:string,correct:boolean}[]} */
+    let history = [];
 
     function showToast(msg, withRetry = false) {
       toast.innerHTML = '';
@@ -407,10 +405,22 @@
         const node = el(k);
         if (k === id) {
           node.classList.remove('hidden');
-          if (k === 'quiz') node.style.display = 'flex';
+          if (k === 'quiz' || k === 'done') node.style.display = 'flex';
         } else {
           node.classList.add('hidden');
         }
+      });
+    }
+
+    function clearOptState() {
+      const fb = el('feedback');
+      fb.className = 'feedback';
+      fb.textContent = '';
+      document.querySelectorAll('.opt').forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove('correct', 'wrong', 'dim');
+        const mark = btn.querySelector('.mark');
+        if (mark) mark.textContent = '';
       });
     }
 
@@ -419,9 +429,52 @@
       el('qNum').textContent = String(item.q);
       el('qSource').textContent = item.source;
       el('qText').textContent = item.text;
+      clearOptState();
+    }
+
+    function showFeedback(picked, correctAns) {
+      const ok = picked === correctAns;
+      const fb = el('feedback');
+      fb.textContent = ok ? '✓ 判断正确' : '✗ 判断有误';
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+
       document.querySelectorAll('.opt').forEach((btn) => {
-        btn.disabled = false;
-        btn.classList.remove('picked');
+        const a = btn.dataset.a;
+        const mark = btn.querySelector('.mark');
+        if (a === correctAns) {
+          btn.classList.add('correct');
+          if (mark) mark.textContent = '✓';
+        } else if (a === picked) {
+          btn.classList.add('wrong');
+          if (mark) mark.textContent = '✗';
+        } else {
+          btn.classList.add('dim');
+        }
+      });
+      return ok;
+    }
+
+    function renderDone() {
+      const correct = history.filter((h) => h.correct).length;
+      const total = QUESTIONS.length;
+      const pct = Math.round((correct / total) * 100);
+      el('scoreBig').textContent = `${correct} / ${total}`;
+      el('scoreSub').textContent = `正确率 ${pct}%`;
+
+      const box = el('review');
+      box.innerHTML = '';
+      history.forEach((h) => {
+        const q = QUESTIONS.find((x) => x.q === h.q);
+        const item = document.createElement('div');
+        item.className = 'rev-item ' + (h.correct ? 'ok' : 'bad');
+        item.innerHTML =
+          `<div class="rev-top">` +
+          `<span>第 ${h.q} 题 · ${q.source}</span>` +
+          `<span class="rev-badge ${h.correct ? 'ok' : 'bad'}">${h.correct ? '✓ 对' : '✗ 错'}</span>` +
+          `</div>` +
+          `<div class="rev-q">${q.text}</div>` +
+          `<div class="rev-meta">你的选择：${LABEL[h.a]}　·　正确答案：${LABEL[ANSWERS[h.q]]}</div>`;
+        box.appendChild(item);
       });
     }
 
@@ -430,11 +483,9 @@
       submitting = true;
       pendingRetry = a;
       const item = QUESTIONS[index];
+      const correctAns = ANSWERS[item.q];
       const buttons = document.querySelectorAll('.opt');
-      buttons.forEach((b) => {
-        b.disabled = true;
-        if (b.dataset.a === a) b.classList.add('picked');
-      });
+      buttons.forEach((b) => { b.disabled = true; });
 
       try {
         if (!supabase) throw new Error('未连接');
@@ -449,22 +500,24 @@
         );
         if (error) throw error;
 
-        await new Promise((r) => setTimeout(r, 400));
+        const ok = showFeedback(a, correctAns);
+        history.push({ q: item.q, a, correct: ok });
         pendingRetry = null;
         toast.classList.remove('show');
+
+        await new Promise((r) => setTimeout(r, 1100));
         index += 1;
         submitting = false;
-        if (index >= QUESTIONS.length) showOnly('done');
-        else {
+        if (index >= QUESTIONS.length) {
+          renderDone();
+          showOnly('done');
+        } else {
           renderQ();
           showOnly('quiz');
         }
       } catch (e) {
         submitting = false;
-        buttons.forEach((b) => {
-          b.disabled = false;
-          b.classList.remove('picked');
-        });
+        clearOptState();
         showToast('提交失败，请检查网络后重试', true);
         console.error(e);
       }
@@ -486,10 +539,8 @@
         mask.classList.remove('closing');
       }, 180);
     }
-
     function openIntro() {
-      const mask = el('introMask');
-      mask.classList.remove('hidden', 'closing');
+      el('introMask').classList.remove('hidden', 'closing');
     }
 
     el('gotItBtn').addEventListener('click', closeIntro);
@@ -501,6 +552,7 @@
     el('startBtn').addEventListener('click', () => {
       closeIntro();
       index = 0;
+      history = [];
       renderQ();
       showOnly('quiz');
     });

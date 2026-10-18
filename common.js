@@ -50,6 +50,19 @@ export const LABEL = {
   real: '现实',
 };
 
+/** 正确答案（用户要求作答后即时反馈） */
+export const ANSWERS = {
+  1: 'word',
+  2: 'real',
+  3: 'word',
+  4: 'real',
+  5: 'word',
+  6: 'real',
+};
+
+/** 投票页公网地址（看板二维码） */
+export const VOTE_URL = 'https://maplemaiden.github.io/mayuan-court/vote.html';
+
 /** 暖调纸感（与页面 CSS 一致） */
 export const COLORS = {
   bg: '#1C1914',

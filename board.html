@@ -31,7 +31,6 @@
     body {
       display: flex;
       flex-direction: column;
-      padding: 20px 28px 12px;
       min-height: 100vh;
       position: relative;
     }
@@ -46,8 +45,87 @@
         radial-gradient(circle at 82% 78%, rgba(185, 71, 50, 0.05), transparent 55%);
       box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.5);
     }
-    body > * { position: relative; z-index: 1; }
+    .screen { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .hidden { display: none !important; }
 
+    /* ===== 首页：二维码 ===== */
+    #landing {
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px 32px;
+      text-align: center;
+    }
+    .land-eyebrow {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+    .land-title {
+      font-family: var(--serif);
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 700;
+      color: var(--emph);
+      margin-bottom: 12px;
+    }
+    .land-sub {
+      font-size: 18px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .qr-wrap {
+      background: #fff;
+      padding: 18px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      margin-bottom: 16px;
+    }
+    .qr-wrap img {
+      display: block;
+      width: min(320px, 55vw);
+      height: auto;
+    }
+    .qr-hint {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.55;
+    }
+    .qr-hint code {
+      font-size: 13px;
+      color: var(--real);
+      word-break: break-all;
+    }
+    .land-live {
+      font-size: 20px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+    .land-live strong {
+      font-size: 40px;
+      color: var(--emph);
+      font-weight: 700;
+      margin: 0 6px;
+    }
+    .btn-go {
+      min-height: 56px;
+      padding: 0 36px;
+      font-size: 20px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      background: var(--word);
+      color: #fff;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+    .btn-go:hover { filter: brightness(1.08); }
+
+    /* ===== 结果页 ===== */
+    #results {
+      padding: 20px 28px 12px;
+    }
     .top {
       display: flex;
       justify-content: space-between;
@@ -77,7 +155,6 @@
       font-weight: 700;
       display: block;
       line-height: 1.1;
-      font-family: var(--sans);
     }
 
     .status-row {
@@ -90,9 +167,7 @@
     }
     .status-dot {
       display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
       background: #6A9A5A;
     }
     .status-dot.err { background: var(--word); }
@@ -104,21 +179,14 @@
       margin-bottom: 16px;
     }
     .q-nav button {
-      min-width: 48px;
-      height: 40px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-size: 16px;
-      cursor: pointer;
+      min-width: 48px; height: 40px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card);
+      color: var(--text); font-size: 16px; cursor: pointer;
       font-family: var(--sans);
     }
     .q-nav button.active {
-      background: var(--word);
-      border-color: var(--word);
-      color: #fff;
-      font-weight: 700;
+      background: var(--word); border-color: var(--word);
+      color: #fff; font-weight: 700;
     }
 
     .main {
@@ -135,11 +203,7 @@
       color: var(--emph);
       margin-bottom: 8px;
     }
-    .source {
-      font-size: 16px;
-      color: var(--muted);
-      margin-bottom: 24px;
-    }
+    .source { font-size: 16px; color: var(--muted); margin-bottom: 24px; }
 
     .bars {
       display: grid;
@@ -159,12 +223,7 @@
       border-radius: 12px;
       padding: 18px 20px;
     }
-    .col-label {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      font-family: var(--sans);
-    }
+    .col-label { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
     .col.word .col-label { color: var(--word); }
     .col.real .col-label { color: var(--real); }
     .count {
@@ -173,7 +232,6 @@
       line-height: 1;
       color: var(--emph);
       margin-bottom: 12px;
-      font-family: var(--sans);
     }
     .track {
       flex: 1;
@@ -214,7 +272,6 @@
       font-size: 42px;
       font-weight: 700;
       color: var(--emph);
-      font-family: var(--sans);
     }
     .reveal-rate span { color: var(--muted); font-size: 22px; font-weight: 500; }
 
@@ -240,6 +297,7 @@
     .ctrl button:hover { background: #3A3227; }
     .ctrl .danger { background: #4A2820; color: #F0D0C8; border-color: #6A3830; }
     .ctrl .accent { background: var(--real); color: #1C1914; border-color: var(--real); font-weight: 600; }
+    .ctrl .primary { background: var(--word); color: #fff; border-color: var(--word); }
     .footer {
       text-align: center;
       font-size: 13px;
@@ -283,77 +341,96 @@
   </style>
 </head>
 <body>
-  <div id="cfgWarn" class="cfg-warn" style="display:none">
-    尚未配置或无法连接。请确认 common.js 与 schema.sql。
-  </div>
-
-  <div class="top">
-    <div>
-      <div class="brand-line">第 5 组 ·《德意志意识形态》第一章</div>
-      <div class="title">词句审判庭 · 实时看板</div>
+  <!-- 首页：二维码 -->
+  <div id="landing" class="screen">
+    <div class="land-eyebrow">第 5 组 ·《德意志意识形态》第一章</div>
+    <h1 class="land-title">词句审判庭</h1>
+    <p class="land-sub">请用手机扫描下方二维码答题<br />答完后抬头看投影，一起总结</p>
+    <div class="qr-wrap">
+      <img src="./qr-vote.png" alt="扫码答题二维码" width="320" height="320" />
     </div>
-    <div class="participants">
-      已参与
-      <strong id="partCount" data-value="0">0</strong>
-      人
+    <p class="qr-hint">连不上？手机浏览器打开<br /><code id="voteUrlText"></code></p>
+    <div class="land-live">已有 <strong id="landPart" data-value="0">0</strong> 人参与</div>
+    <button type="button" class="btn-go" id="btnToResults">进入答题情况 →</button>
+  </div>
+
+  <!-- 结果页 -->
+  <div id="results" class="screen hidden">
+    <div id="cfgWarn" class="cfg-warn" style="display:none">
+      尚未配置或无法连接。请确认 common.js 与 schema.sql。
     </div>
-  </div>
 
-  <div class="status-row">
-    <span class="status-dot" id="dot"></span>
-    <span id="pollStatus">票数每 2 秒刷新 · 总结时用下方题号切换</span>
-  </div>
-
-  <div class="q-nav" id="qNav"></div>
-
-  <div class="main">
-    <div class="stem" id="stem"></div>
-    <div class="source" id="source"></div>
-
-    <div class="bars">
-      <div class="col word">
-        <div class="col-label">词句</div>
-        <div class="count" id="wordCount" data-value="0">0</div>
-        <div class="track"><div class="fill" id="wordFill"></div></div>
+    <div class="top">
+      <div>
+        <div class="brand-line">第 5 组 ·《德意志意识形态》第一章</div>
+        <div class="title">词句审判庭 · 答题情况</div>
       </div>
-      <div class="col real">
-        <div class="col-label">现实</div>
-        <div class="count" id="realCount" data-value="0">0</div>
-        <div class="track"><div class="fill" id="realFill"></div></div>
+      <div class="participants">
+        已参与
+        <strong id="partCount" data-value="0">0</strong>
+        人
       </div>
     </div>
 
-    <div class="reveal-panel" id="revealPanel">
-      <div class="reveal-answer" id="revealAnswer"></div>
-      <div class="reveal-rate" id="revealRate"></div>
+    <div class="status-row">
+      <span class="status-dot" id="dot"></span>
+      <span id="pollStatus">票数每 2 秒刷新</span>
     </div>
-  </div>
 
-  <div class="ctrl">
-    <button type="button" id="btnPrev">上一题</button>
-    <button type="button" id="btnNext">下一题</button>
-    <button type="button" class="accent" id="btnReveal">揭晓</button>
-    <button type="button" id="btnHideReveal">收起揭晓</button>
-    <button type="button" id="btnManual">手动补票 ▾</button>
-    <button type="button" class="danger" id="btnClear">清空全部数据</button>
-  </div>
+    <div class="q-nav" id="qNav"></div>
 
-  <div class="manual" id="manualPanel">
-    <label>词句票数</label>
-    <input id="manualWord" type="number" min="0" value="0" />
-    <label>现实票数</label>
-    <input id="manualReal" type="number" min="0" value="0" />
-    <button type="button" id="manualApply">填入（覆盖本题统计）</button>
-    <span style="font-size:12px;color:var(--muted)">举手统计兜底</span>
-  </div>
+    <div class="main">
+      <div class="stem" id="stem"></div>
+      <div class="source" id="source"></div>
 
-  <div class="footer">第 5 组 ·《德意志意识形态》第一章 · 大家答完后一起总结</div>
+      <div class="bars">
+        <div class="col word">
+          <div class="col-label">词句</div>
+          <div class="count" id="wordCount" data-value="0">0</div>
+          <div class="track"><div class="fill" id="wordFill"></div></div>
+        </div>
+        <div class="col real">
+          <div class="col-label">现实</div>
+          <div class="count" id="realCount" data-value="0">0</div>
+          <div class="track"><div class="fill" id="realFill"></div></div>
+        </div>
+      </div>
+
+      <div class="reveal-panel" id="revealPanel">
+        <div class="reveal-answer" id="revealAnswer"></div>
+        <div class="reveal-rate" id="revealRate"></div>
+      </div>
+    </div>
+
+    <div class="ctrl">
+      <button type="button" class="primary" id="btnBackQr">← 返回二维码</button>
+      <button type="button" id="btnPrev">上一题</button>
+      <button type="button" id="btnNext">下一题</button>
+      <button type="button" class="accent" id="btnReveal">揭晓</button>
+      <button type="button" id="btnHideReveal">收起揭晓</button>
+      <button type="button" id="btnManual">手动补票 ▾</button>
+      <button type="button" class="danger" id="btnClear">清空全部数据</button>
+    </div>
+
+    <div class="manual" id="manualPanel">
+      <label>词句票数</label>
+      <input id="manualWord" type="number" min="0" value="0" />
+      <label>现实票数</label>
+      <input id="manualReal" type="number" min="0" value="0" />
+      <button type="button" id="manualApply">填入（覆盖本题统计）</button>
+      <span style="font-size:12px;color:var(--muted)">举手统计兜底</span>
+    </div>
+
+    <div class="footer">第 5 组 ·《德意志意识形态》第一章 · 大家答完后一起总结</div>
+  </div>
 
   <script type="module">
     import {
       QUESTIONS,
       SESSION,
       LABEL,
+      ANSWERS,
+      VOTE_URL,
       isConfigured,
       loadSupabase,
       tallyVotes,
@@ -361,20 +438,23 @@
       animateNumber,
     } from './common.js';
 
-    const ANSWERS = {
-      1: 'word',
-      2: 'real',
-      3: 'word',
-      4: 'real',
-      5: 'word',
-      6: 'real',
-    };
-
     const el = (id) => document.getElementById(id);
     let supabase = null;
     let currentQ = 1;
     let votesCache = [];
     let revealed = false;
+    let onResults = false;
+
+    el('voteUrlText').textContent = VOTE_URL;
+
+    function showScreen(name) {
+      onResults = name === 'results';
+      el('landing').classList.toggle('hidden', name !== 'landing');
+      el('results').classList.toggle('hidden', name !== 'results');
+    }
+
+    el('btnToResults').addEventListener('click', () => showScreen('results'));
+    el('btnBackQr').addEventListener('click', () => showScreen('landing'));
 
     const qNav = el('qNav');
     QUESTIONS.forEach((q) => {
@@ -405,6 +485,7 @@
       animateNumber(el('wordCount'), word);
       animateNumber(el('realCount'), real);
       animateNumber(el('partCount'), parts);
+      animateNumber(el('landPart'), parts);
 
       const max = Math.max(word, real, 1);
       el('wordFill').style.height = Math.round((word / max) * 100) + '%';
@@ -437,7 +518,7 @@
         el('pollStatus').textContent =
           '票数每 2 秒刷新 · ' + new Date().toLocaleTimeString();
         renderBars();
-        if (revealed) showReveal();
+        if (revealed && onResults) showReveal();
       } catch (e) {
         el('dot').classList.add('err');
         console.error(e);
@@ -526,6 +607,7 @@
 
     async function boot() {
       setQuestion(1);
+      showScreen('landing');
       if (!isConfigured()) {
         el('cfgWarn').style.display = 'block';
         el('dot').classList.add('err');
