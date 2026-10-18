@@ -361,20 +361,19 @@
   <script type="module">
     import {
       QUESTIONS,
-      SESSION,
       ANSWERS,
       LABEL,
       getClientId,
       isConfigured,
-      loadSupabase,
+      upsertVote,
     } from './common.js';
 
     const el = (id) => document.getElementById(id);
     const toast = el('toast');
-    let supabase = null;
     let index = 0;
     let submitting = false;
     let pendingRetry = null;
+    let ready = false;
     /** @type {{q:number,a:string,correct:boolean}[]} */
     let history = [];
 
@@ -488,17 +487,12 @@
       buttons.forEach((b) => { b.disabled = true; });
 
       try {
-        if (!supabase) throw new Error('未连接');
-        const { error } = await supabase.from('votes').upsert(
-          {
-            client_id: getClientId(),
-            q: item.q,
-            a,
-            session: SESSION,
-          },
-          { onConflict: 'session,client_id,q' }
-        );
-        if (error) throw error;
+        if (!ready) throw new Error('未连接');
+        await upsertVote({
+          client_id: getClientId(),
+          q: item.q,
+          a,
+        });
 
         const ok = showFeedback(a, correctAns);
         history.push({ q: item.q, a, correct: ok });
@@ -557,18 +551,13 @@
       showOnly('quiz');
     });
 
-    async function boot() {
+    function boot() {
       if (!isConfigured()) {
         el('cfgWarn').classList.remove('hidden');
+        ready = false;
         return;
       }
-      try {
-        supabase = await loadSupabase();
-      } catch (e) {
-        el('cfgWarn').classList.remove('hidden');
-        el('cfgWarn').textContent = '加载失败，请换网络或用系统浏览器打开。';
-        console.error(e);
-      }
+      ready = true;
     }
 
     boot();

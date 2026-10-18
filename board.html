@@ -351,6 +351,7 @@
     </div>
     <p class="qr-hint">连不上？手机浏览器打开<br /><code id="voteUrlText"></code></p>
     <div class="land-live">已有 <strong id="landPart" data-value="0">0</strong> 人参与</div>
+    <p class="qr-hint" style="margin-top:-12px;margin-bottom:22px">同一手机重复提交不会加票（只覆盖）· 票数在下一页</p>
     <button type="button" class="btn-go" id="btnToResults">进入答题情况 →</button>
   </div>
 
@@ -427,23 +428,24 @@
   <script type="module">
     import {
       QUESTIONS,
-      SESSION,
       LABEL,
       ANSWERS,
       VOTE_URL,
       isConfigured,
-      loadSupabase,
+      fetchVotes as apiFetchVotes,
+      clearVotes,
+      replaceQuestionVotes,
       tallyVotes,
       participantCount,
       animateNumber,
     } from './common.js';
 
     const el = (id) => document.getElementById(id);
-    let supabase = null;
     let currentQ = 1;
     let votesCache = [];
     let revealed = false;
     let onResults = false;
+    let ready = false;
 
     el('voteUrlText').textContent = VOTE_URL;
 
@@ -506,14 +508,9 @@
     }
 
     async function fetchVotes() {
-      if (!supabase) return;
+      if (!ready) return;
       try {
-        const { data, error } = await supabase
-          .from('votes')
-          .select('q,a,client_id')
-          .eq('session', SESSION);
-        if (error) throw error;
-        votesCache = data || [];
+        votesCache = await apiFetchVotes();
         el('dot').classList.remove('err');
         el('pollStatus').textContent =
           '票数每 2 秒刷新 · ' + new Date().toLocaleTimeString();
@@ -521,6 +518,7 @@
         if (revealed && onResults) showReveal();
       } catch (e) {
         el('dot').classList.add('err');
+        el('pollStatus').textContent = '读取票数失败，请刷新页面';
         console.error(e);
       }
     }
@@ -545,40 +543,13 @@
     });
 
     el('manualApply').addEventListener('click', async () => {
-      if (!supabase) return alert('未配置数据库');
+      if (!ready) return alert('未配置数据库');
       const w = Math.max(0, parseInt(el('manualWord').value, 10) || 0);
       const r = Math.max(0, parseInt(el('manualReal').value, 10) || 0);
       if (!confirm(`将第 ${currentQ} 题票数覆盖为：词句 ${w} / 现实 ${r}？`)) return;
 
       try {
-        const { error: delErr } = await supabase
-          .from('votes')
-          .delete()
-          .eq('session', SESSION)
-          .eq('q', currentQ);
-        if (delErr) throw delErr;
-
-        const rows = [];
-        for (let i = 0; i < w; i++) {
-          rows.push({
-            client_id: `manual_w_${currentQ}_${i}`,
-            q: currentQ,
-            a: 'word',
-            session: SESSION,
-          });
-        }
-        for (let i = 0; i < r; i++) {
-          rows.push({
-            client_id: `manual_r_${currentQ}_${i}`,
-            q: currentQ,
-            a: 'real',
-            session: SESSION,
-          });
-        }
-        if (rows.length) {
-          const { error: insErr } = await supabase.from('votes').insert(rows);
-          if (insErr) throw insErr;
-        }
+        await replaceQuestionVotes(currentQ, w, r);
         await fetchVotes();
         alert('已填入');
       } catch (e) {
@@ -588,15 +559,11 @@
     });
 
     el('btnClear').addEventListener('click', async () => {
-      if (!supabase) return alert('未配置数据库');
+      if (!ready) return alert('未配置数据库');
       if (!confirm('确认清空全部投票数据？')) return;
       if (!confirm('再次确认：清空后不可恢复。')) return;
       try {
-        const { error } = await supabase
-          .from('votes')
-          .delete()
-          .eq('session', SESSION);
-        if (error) throw error;
+        await clearVotes();
         revealed = false;
         el('revealPanel').classList.remove('show');
         await fetchVotes();
@@ -611,17 +578,12 @@
       if (!isConfigured()) {
         el('cfgWarn').style.display = 'block';
         el('dot').classList.add('err');
+        ready = false;
         return;
       }
-      try {
-        supabase = await loadSupabase();
-        await fetchVotes();
-        setInterval(fetchVotes, 2000);
-      } catch (e) {
-        el('cfgWarn').style.display = 'block';
-        el('cfgWarn').textContent = '加载失败：' + (e.message || e);
-        el('dot').classList.add('err');
-      }
+      ready = true;
+      await fetchVotes();
+      setInterval(fetchVotes, 2000);
     }
 
     boot();
